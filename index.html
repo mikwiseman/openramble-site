@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenRamble: local dictation for Mac</title>
+<meta name="description" content="Hold a key, speak, let go. OpenRamble writes clean text at your cursor in any Mac app. Recognition runs on your Mac. Free and open source.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f8fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0e14" media="(prefers-color-scheme: dark)">
+<!-- DOMAIN: openramble.app is a placeholder until the domain is bought. Update here, in og:*, and in CNAME. -->
+<link rel="canonical" href="https://openramble.app/">
+<link rel="alternate" hreflang="en" href="https://openramble.app/">
+<link rel="alternate" hreflang="ru" href="https://waiwai.is/ramble">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OpenRamble">
+<meta property="og:title" content="OpenRamble: local dictation for Mac">
+<meta property="og:description" content="Dictation that cleans your ums, not your meaning. Recognition runs on your Mac. Free and open source.">
+<meta property="og:url" content="https://openramble.app/">
+<meta property="og:image" content="https://openramble.app/app-icon.png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="The OpenRamble icon">
+<meta name="twitter:card" content="summary">
+<style>
+/* Hallmark · macrostructure: bespoke (demo-led hero → typographic feature list → proof) · tone: technical, plain, one playful motif
+ * theme: custom (vibe: "brand midnight blue, ink on paper, struck-through ums")
+ * paper oklch(98% 0.005 250) / dark oklch(14% 0.014 252) · accent oklch(52% 0.19 256) / dark oklch(72% 0.16 250) blue
+ * display + body: Manrope (self-hosted, OFL) · data: system monospace · axes: light+dark / geometric-sans / cool
+ * nav: N9 edge-aligned · footer: Ft5 statement · enrichment: interactive type demo (Tier A, CSS + 120 lines of JS)
+ * pre-emit critique: P5 H5 E5 S5 R5 V4
+ * No third-party requests: fonts are local, there is no analytics, no tracker, no CDN.
+ */
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url(fonts/manrope-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url(fonts/manrope-cyrillic.woff2) format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+:root {
+  --color-paper: oklch(98% 0.005 250);
+  --color-paper-2: oklch(95.5% 0.009 250);
+  --color-rule: oklch(89% 0.011 250);
+  --color-rule-strong: oklch(78% 0.016 250);
+  --color-ink: oklch(21% 0.022 256);
+  --color-muted: oklch(43% 0.02 254);
+  --color-faint: oklch(51% 0.018 252);
+  --color-accent: oklch(52% 0.19 256);
+  --color-accent-quiet: oklch(93.5% 0.035 250);
+  --color-focus: oklch(55% 0.2 256);
+  --color-key: oklch(99% 0.003 250);
+  --color-key-edge: oklch(80% 0.014 250);
+
+  --font-display: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1.0625rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: clamp(1.75rem, 1.3rem + 1.6vw, 2.441rem);
+  --text-demo: clamp(1.3rem, 1.05rem + 0.9vw, 1.8rem);
+  --text-display: clamp(2.3rem, 1.2rem + 5vw, 5.4rem);
+
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: clamp(5rem, 3rem + 6vw, 8.5rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --rule-hair: 1px;
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: oklch(14% 0.014 252);
+    --color-paper-2: oklch(18% 0.018 252);
+    --color-rule: oklch(28% 0.022 252);
+    --color-rule-strong: oklch(40% 0.03 252);
+    --color-ink: oklch(95% 0.008 252);
+    --color-muted: oklch(77% 0.016 252);
+    --color-faint: oklch(66% 0.02 252);
+    --color-accent: oklch(72% 0.16 250);
+    --color-accent-quiet: oklch(26% 0.07 250);
+    --color-focus: oklch(78% 0.17 250);
+    --color-key: oklch(24% 0.02 252);
+    --color-key-edge: oklch(9% 0.012 252);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) { body { font-weight: 380; } }
+
+h1, h2, h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: normal;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  text-wrap: balance;
+}
+p { margin: 0; text-wrap: pretty; }
+a { color: inherit; }
+code, pre, kbd { font-family: var(--font-data); }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; border-radius: 4px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.wrap { width: min(100% - 2rem, 74rem); margin-inline: auto; }
+
+/* Links inside running text */
+.prose a, .link {
+  color: var(--color-accent);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-thickness var(--dur-micro) var(--ease-out);
+}
+.prose a:hover, .link:hover { text-decoration-thickness: 2px; }
+
+/* ── Nav ───────────────────────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-lg);
+}
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 2.75rem;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.mark img { width: 2.25rem; height: 2.25rem; border-radius: 0.55rem; }
+.nav-links { display: flex; align-items: center; gap: var(--space-2xs); }
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 2.75rem;
+  padding-inline: var(--space-sm);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.nav-link:hover { color: var(--color-ink); }
+.nav-link svg { width: 1.125rem; height: 1.125rem; flex: none; }
+@media (max-width: 30rem) { .nav-link .label { display: none; } }
+/* Below 360px the hero button right under the nav is the download. */
+@media (max-width: 22.4rem) { .nav-download { display: none; } }
+
+/* ── Buttons ───────────────────────────────────────── */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: 3.25rem;
+  padding-inline: var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+.button:hover { transform: translateY(-1px); }
+.button:active { transform: translateY(1px); }
+.button svg { width: 1.1rem; height: 1.1rem; flex: none; }
+
+/* ── Hero ──────────────────────────────────────────── */
+.hero { padding-top: clamp(var(--space-xl), 6vw, 5.5rem); }
+.hero h1 {
+  max-width: 15ch;
+  font-size: var(--text-display);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+/* The one playful motif of the page: the word the product deletes is
+   struck through, in the same accent line the demo uses below. */
+.cut-word { position: relative; white-space: nowrap; }
+.cut-word::after {
+  content: "";
+  position: absolute;
+  left: -0.04em;
+  right: -0.04em;
+  top: 52%;
+  height: 0.075em;
+  border-radius: 1px;
+  background: var(--color-accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: draw-cut 520ms var(--ease-out) 650ms forwards;
+}
+@keyframes draw-cut { to { transform: scaleX(1); } }
+
+.hero-grid {
+  display: grid;
+  gap: var(--space-xl);
+  margin-top: var(--space-xl);
+  align-items: start;
+}
+@media (min-width: 60rem) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-2xl);
+    margin-top: var(--space-2xl);
+  }
+}
+.lede {
+  max-width: 34ch;
+  color: var(--color-muted);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+.lede strong { color: var(--color-ink); font-weight: 700; }
+.get { display: grid; gap: var(--space-md); margin-top: var(--space-xl); justify-items: start; }
+.get-meta { color: var(--color-faint); font-size: var(--text-sm); line-height: 1.5; }
+.brew {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+.brew code { color: var(--color-muted); overflow-wrap: anywhere; }
+
+/* Release tag, shared by features that have not shipped yet. */
+.soon {
+  display: inline-block;
+  padding: 0.1em 0.55em 0.15em;
+  border-radius: 999px;
+  background: var(--color-accent-quiet);
+  color: var(--color-accent);
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.5;
+  white-space: nowrap;
+  vertical-align: 0.2em;
+}
+
+/* ── Demo ──────────────────────────────────────────── */
+.demo {
+  margin: 0;
+  padding: var(--space-lg);
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-2);
+}
+@media (min-width: 48rem) { .demo { padding: var(--space-xl); } }
+.demo-head { display: flex; align-items: center; gap: var(--space-md); min-height: 3.5rem; }
+.key {
+  position: relative;
+  flex: none;
+  width: 4.75rem;
+  height: 3.25rem;
+  padding: 0;
+  border: var(--rule-hair) solid var(--color-rule-strong);
+  border-radius: 0.6rem;
+  background: var(--color-key);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  box-shadow: 0 3px 0 var(--color-key-edge);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
+}
+.key:hover { border-color: var(--color-faint); }
+.key-glyph { position: absolute; top: 0.3rem; right: 0.5rem; font-size: 0.95rem; line-height: 1; }
+.key-name { position: absolute; bottom: 0.35rem; left: 0.5rem; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.01em; line-height: 1; }
+.demo.is-held .key { transform: translateY(2px); box-shadow: 0 1px 0 var(--color-key-edge); }
+
+.demo-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  color: var(--color-muted);
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+.bars { display: inline-flex; align-items: center; gap: 3px; height: 1.1rem; flex: none; }
+.bars span {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-faint);
+  transform: scaleY(0.35);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+.demo.is-held .bars span { background: var(--color-accent); animation: level 640ms var(--ease-in-out) infinite alternate; }
+.demo.is-held .bars span:nth-child(2) { animation-delay: -160ms; animation-duration: 520ms; }
+.demo.is-held .bars span:nth-child(3) { animation-delay: -320ms; animation-duration: 700ms; }
+.demo.is-held .bars span:nth-child(4) { animation-delay: -80ms; animation-duration: 580ms; }
+.demo.is-held .bars span:nth-child(5) { animation-delay: -240ms; animation-duration: 660ms; }
+@keyframes level { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+
+.demo-label {
+  margin-top: var(--space-lg);
+  color: var(--color-faint);
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  line-height: 1;
+}
+.heard, .typed {
+  margin-top: var(--space-xs);
+  font-size: var(--text-demo);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+.heard { min-height: calc(3 * 1.35em); color: var(--color-muted); }
+@media (min-width: 48rem) { .heard { min-height: calc(2 * 1.35em); } }
+.typed { min-height: 1.35em; color: var(--color-ink); font-weight: 750; }
+.typed-row { margin-top: var(--space-lg); padding-top: var(--space-xs); border-top: var(--rule-hair) solid var(--color-rule); }
+
+.w { position: relative; display: inline-block; }
+.w > span { display: inline-block; transition: opacity var(--dur-long) var(--ease-out), transform var(--dur-short) var(--ease-out); }
+.w::after {
+  content: "";
+  position: absolute;
+  left: -0.05em;
+  right: -0.05em;
+  top: 54%;
+  height: 0.09em;
+  border-radius: 1px;
+  background: var(--color-accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 300ms var(--ease-out);
+}
+.js .w > span { opacity: 0; transform: translateY(0.18em); }
+.js .w.is-on > span { opacity: 1; transform: none; }
+.w.is-cut > span, .js .w.is-cut > span { opacity: 0.38; }
+.w.is-cut::after { transform: scaleX(1); }
+.w.is-cmd > span { color: var(--color-accent); }
+
+.typed-text { transition: opacity var(--dur-long) var(--ease-out); }
+.js .typed:not(.is-on) .typed-text, .js .typed:not(.is-on) .caret { opacity: 0; }
+.caret {
+  display: inline-block;
+  width: 0.08em;
+  height: 1.05em;
+  margin-left: 0.06em;
+  vertical-align: -0.16em;
+  background: var(--color-accent);
+  animation: blink 1s steps(1) 4;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── Sections ──────────────────────────────────────── */
+.section { padding-top: var(--space-3xl); }
+.section-head { display: grid; gap: var(--space-md); max-width: 44rem; }
+.section-head h2 { font-size: var(--text-xl); font-weight: 780; }
+.section-head p { color: var(--color-muted); font-size: var(--text-md); line-height: 1.5; max-width: 38ch; }
+
+/* Features: a typographic list, not cards. */
+.feats {
+  display: grid;
+  gap: 0 var(--space-2xl);
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 48rem) { .feats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.feat { padding-block: var(--space-lg) var(--space-xl); border-top: var(--rule-hair) solid var(--color-rule); }
+.feat h3 { font-size: var(--text-lg); font-weight: 750; letter-spacing: -0.03em; line-height: 1.15; }
+.feat h3 .soon { margin-left: var(--space-xs); }
+.feat.lead { grid-column: 1 / -1; }
+.feat.lead h3 { font-size: var(--text-xl); }
+.feat.lead p { max-width: 56ch; font-size: var(--text-md); line-height: 1.55; }
+.feat.lead p.spec { font-size: var(--text-sm); }
+.feat p { margin-top: var(--space-sm); color: var(--color-muted); max-width: 46ch; }
+.feat p.note { color: var(--color-faint); font-size: var(--text-sm); }
+.feat p.spec { max-width: none; }
+.spec {
+  margin: var(--space-md) 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.spec .from { display: block; color: var(--color-faint); }
+.spec .to { display: block; }
+.spec .to::before { content: "→ "; color: var(--color-accent); }
+
+/* Verify */
+.checks { margin: var(--space-xl) 0 0; padding: 0; list-style: none; counter-reset: check; }
+.check {
+  display: grid;
+  gap: var(--space-sm) var(--space-2xl);
+  padding-block: var(--space-lg);
+  border-top: var(--rule-hair) solid var(--color-rule);
+  counter-increment: check;
+}
+@media (min-width: 48rem) { .check { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); } }
+.check h3 { font-size: var(--text-lg); font-weight: 750; letter-spacing: -0.03em; line-height: 1.15; }
+.check h3::before {
+  content: counter(check);
+  display: inline-block;
+  min-width: 1.6em;
+  color: var(--color-accent);
+  font-family: var(--font-data);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0;
+  vertical-align: 0.12em;
+}
+.check-body { display: grid; gap: var(--space-sm); color: var(--color-muted); }
+.check-body p { max-width: 54ch; }
+.cmd {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Tables that become stacked blocks on phones */
+.table-wrap { margin-top: var(--space-xl); }
+table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table-note { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-sm); line-height: 1.55; max-width: 72rem; }
+th, td { padding: var(--space-sm) var(--space-md) var(--space-sm) 0; border-bottom: var(--rule-hair) solid var(--color-rule); text-align: left; vertical-align: top; }
+thead th { color: var(--color-faint); font-family: var(--font-data); font-size: var(--text-xs); font-weight: 500; line-height: 1.4; }
+tbody th { font-weight: 700; color: var(--color-ink); }
+tbody th small { display: block; color: var(--color-faint); font-weight: 500; font-size: var(--text-xs); }
+td { color: var(--color-muted); }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--color-ink); white-space: nowrap; }
+.na { color: var(--color-faint); }
+tr.ours th, tr.ours td.num { color: var(--color-accent); }
+@media (max-width: 47.99rem) {
+  table.stack, .stack tbody, .stack tr, .stack th, .stack td { display: block; }
+  .stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .stack tr { padding-block: var(--space-md); border-bottom: var(--rule-hair) solid var(--color-rule); }
+  .stack th, .stack td { padding: 0; border: 0; }
+  .stack tbody th { margin-bottom: var(--space-xs); font-size: var(--text-base); }
+  .stack td { display: flex; justify-content: space-between; gap: var(--space-md); padding-block: 0.2rem; text-align: right; }
+  .stack td::before { content: attr(data-label); color: var(--color-faint); font-family: var(--font-data); font-size: var(--text-xs); line-height: 2; }
+  .stack td.span { display: block; }
+  .stack td.span::before { content: none; }
+  .stack td .num { white-space: normal; text-align: right; }
+}
+
+.findings { display: grid; gap: var(--space-md); margin: var(--space-xl) 0 0; padding: 0; list-style: none; max-width: 46rem; }
+.findings li { color: var(--color-muted); }
+.findings strong { color: var(--color-ink); font-weight: 700; }
+
+.page-note {
+  margin-top: var(--space-xl);
+  padding-left: var(--space-md);
+  border-left: 2px solid var(--color-accent);
+  color: var(--color-muted);
+  max-width: 52ch;
+}
+
+/* Limits and credits */
+.pair { display: grid; gap: var(--space-2xl); }
+@media (min-width: 60rem) { .pair { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-3xl); } }
+.limits { display: grid; gap: var(--space-md); margin: var(--space-lg) 0 0; padding: 0; list-style: none; }
+.limits li { color: var(--color-muted); }
+.limits strong { color: var(--color-ink); font-weight: 700; }
+.credits { margin-top: var(--space-lg); color: var(--color-muted); max-width: 40ch; }
+.small-h { font-size: var(--text-lg); font-weight: 750; letter-spacing: -0.03em; }
+
+/* ── Footer ────────────────────────────────────────── */
+.footer { padding-block: var(--space-3xl) var(--space-xl); }
+.footer-line {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+.footer-line .cut-word::after { top: 46%; animation: none; transform: scaleX(1); }
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md) var(--space-xl);
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-lg);
+  border-top: var(--rule-hair) solid var(--color-rule);
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+.footer-links { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-lg); }
+.footer-links a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--color-muted); text-decoration: none; white-space: nowrap; }
+.footer-links a:hover { color: var(--color-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.fine { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-xs); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 150ms !important;
+  }
+  .js .w > span, .w::after { transform: none; }
+  .w::after { opacity: 0; transition-property: opacity; }
+  .w.is-cut::after { opacity: 1; }
+  .demo.is-held .bars span { animation: none; transform: scaleY(0.6); }
+}
+</style>
+</head>
+<body>
+<header class="wrap nav">
+  <a class="mark" href="./" aria-label="OpenRamble home">
+    <img src="icon-128.png" alt="" width="36" height="36">
+    <span>OpenRamble</span>
+  </a>
+  <nav class="nav-links" aria-label="Main">
+    <a class="nav-link" href="https://github.com/mikwiseman/openramble" aria-label="Source on GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      <span class="label">Source on GitHub</span>
+    </a>
+    <a class="nav-link nav-download" href="https://github.com/mikwiseman/openramble/releases/latest">Download</a>
+  </nav>
+</header>
+
+<main>
+  <!-- SHIP GATE: the headline and the demo below describe Clean Verbatim, which has
+       not shipped yet (see the features list). Publish the site only after it ships. -->
+  <section class="wrap hero" aria-labelledby="title">
+    <h1 id="title">Dictation that cleans your <span class="cut-word">ums</span>, not your meaning.</h1>
+
+    <div class="hero-grid">
+      <div>
+        <p class="lede">Hold <strong>Right&nbsp;⌘</strong>, speak, let go. Clean text lands at your cursor in any Mac app. Recognition runs on your Mac. Free and open source.</p>
+        <div class="get">
+          <!-- DOWNLOAD: points at the latest GitHub release for now. Swap for a stable DMG URL when it exists. -->
+          <a class="button" href="https://github.com/mikwiseman/openramble/releases/latest">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>
+            Download for Mac
+          </a>
+          <p class="get-meta">Free · macOS 14 or later · Apple Silicon, Intel experimental<br>Signed and notarized by Apple. Public beta.</p>
+          <!-- SOON: Homebrew cask. When it ships, delete the .soon tag below. -->
+          <p class="brew"><code>brew install --cask openramble</code> <span class="soon">coming soon</span></p>
+        </div>
+      </div>
+
+      <figure class="demo" id="demo" aria-describedby="demo-caption">
+        <div class="demo-head">
+          <button class="key" id="demo-key" type="button" aria-label="Play the demo again">
+            <span class="key-glyph" aria-hidden="true">⌘</span>
+            <span class="key-name" aria-hidden="true">command</span>
+          </button>
+          <p class="demo-status" aria-hidden="true">
+            <span class="bars"><span></span><span></span><span></span><span></span><span></span></span>
+            <span id="demo-status">Hold the key to try it</span>
+          </p>
+        </div>
+        <div aria-hidden="true">
+          <p class="demo-label">Heard</p>
+          <!-- Static final state, so the page reads correctly without JavaScript. -->
+          <p class="heard" id="demo-heard"><span class="w is-on is-cut"><span>um,</span></span> <span class="w is-on is-cut"><span>so</span></span> <span class="w is-on is-cut"><span>the</span></span> <span class="w is-on is-cut"><span>the</span></span> <span class="w is-on is-cut"><span>deploy</span></span> <span class="w is-on is-cut"><span>failed,</span></span> <span class="w is-on is-cut"><span>uh,</span></span> <span class="w is-on is-cut"><span>scratch</span></span> <span class="w is-on is-cut"><span>that.</span></span> <span class="w is-on"><span>The</span></span> <span class="w is-on"><span>deploy</span></span> <span class="w is-on"><span>passed.</span></span></p>
+          <div class="typed-row">
+            <p class="demo-label">Typed</p>
+            <p class="typed is-on" id="demo-typed"><span class="typed-text">The deploy passed.</span><span class="caret"></span></p>
+          </div>
+        </div>
+        <figcaption class="sr-only" id="demo-caption">You say: “um, so the the deploy failed, uh, scratch that. The deploy passed.” OpenRamble types: “The deploy passed.”</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!--
+    FEATURE TOGGLES. A feature that has not shipped carries data-soon and a
+    <span class="soon">coming soon</span> tag. When it ships, delete both.
+      Clean Verbatim ........ soon
+      As spoken ............. soon
+      "Send it." ............ soon
+      Shift → English ....... soon
+      Any app, clipboard .... shipped
+      Meeting recorder ...... shipped
+      Screen recording ...... shipped
+      Command line .......... shipped
+  -->
+  <section class="wrap section" aria-labelledby="dictation-title">
+    <div class="section-head">
+      <h2 id="dictation-title">Dictation</h2>
+      <p>Talk the way you talk. Get the words you meant, and nothing you didn’t say.</p>
+    </div>
+    <ul class="feats">
+      <li class="feat lead" data-soon>
+        <h3>Clean Verbatim <span class="soon">coming soon</span></h3>
+        <p>Deletes ums, uhs and stutters, and drops the sentence before “scratch that.” It only ever deletes. It never paraphrases you or changes what you meant.</p>
+        <p class="spec"><span class="from">I I think we should, um, ship it.</span><span class="to">I think we should ship it.</span></p>
+      </li>
+      <li class="feat" data-soon>
+        <h3>As spoken <span class="soon">coming soon</span></h3>
+        <p>Open any take in History and see it the way you said it, with every deletion struck through. Copy the raw words whenever you need them.</p>
+      </li>
+      <li class="feat" data-soon>
+        <h3>“Send it.” <span class="soon">coming soon</span></h3>
+        <p>End a take with “Send it.” in a terminal, and OpenRamble presses Return for you. It works only in terminals and only as its own last sentence, so a “send” in the middle of your text stays text.</p>
+      </li>
+      <li class="feat" data-soon>
+        <h3>Shift for English <span class="soon">coming soon</span></h3>
+        <p>Hold Shift with the dictation key and speak another language. English comes out, translated on your Mac by Apple’s on-device translation.</p>
+        <p class="spec"><span class="from" lang="ru">Успеешь сегодня посмотреть пул-реквест?</span><span class="to">Can you look at the pull request today?</span></p>
+      </li>
+      <li class="feat">
+        <h3>Any app, clipboard intact</h3>
+        <p>Text goes in at the cursor, wherever it is. Your clipboard comes back byte for byte, and dictated text is marked so it skips Universal Clipboard and clipboard managers.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap section" aria-labelledby="recording-title">
+    <div class="section-head">
+      <h2 id="recording-title">Recording</h2>
+      <p>For when a sentence isn’t enough. Same model, same Mac.</p>
+    </div>
+    <ul class="feats">
+      <li class="feat lead">
+        <h3>Meeting recorder</h3>
+        <p>Records your microphone and the other side of the call, and transcribes both on your Mac while you record, labelled You and Others. Recordings stay until you delete them.</p>
+        <p class="note">Ask people before you record them. In many places it is the law.</p>
+      </li>
+      <li class="feat">
+        <h3>Screen recording</h3>
+        <p>Record a display with your voice, Mac audio and a camera bubble you can move while you talk. You get an MP4 next to the transcript, on your Mac. No upload, no share links.</p>
+      </li>
+      <li class="feat">
+        <h3>Command line</h3>
+        <p>Transcribe files from the terminal with the model the app already installed. TXT, JSON, SRT or VTT. A skill for Claude Code and Codex comes with it.</p>
+        <p class="spec">openramble interview.m4a --format srt &gt; interview.srt</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="wrap section" aria-labelledby="verify-title">
+    <div class="section-head">
+      <h2 id="verify-title">Verify it yourself</h2>
+      <p>Your voice and text never leave your Mac. You don’t have to take our word for it.</p>
+    </div>
+    <ol class="checks">
+      <li class="check">
+        <h3>Read the gate</h3>
+        <div class="check-body prose">
+          <p>Every change runs <a href="https://github.com/mikwiseman/openramble/blob/main/scripts/check-network-surface.sh"><code>check-network-surface.sh</code></a> in <a href="https://github.com/mikwiseman/openramble/actions/workflows/ci.yml">CI</a>. The build fails if shipping code can reach the network anywhere except two declared places: model downloads and update checks.</p>
+        </div>
+      </li>
+      <li class="check">
+        <h3>Run it offline</h3>
+        <div class="check-body">
+          <p>In a clone of the repository, with the model installed, run recognition in a sandbox where the network is denied. If anything tries to connect, the test fails.</p>
+          <pre class="cmd"><code>./scripts/test-zero-network.sh</code></pre>
+        </div>
+      </li>
+      <li class="check">
+        <h3>Watch the wire</h3>
+        <div class="check-body">
+          <p>Open LuLu or Little Snitch and dictate. Recognition makes no connections. These three are the only ones the app ever makes:</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="table-wrap">
+      <table class="stack">
+        <caption class="sr-only">Every connection the app makes</caption>
+        <thead>
+          <tr><th scope="col">Connection</th><th scope="col">Goes to</th><th scope="col">When</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Model download</th><td data-label="Goes to">Hugging Face, GitHub as a fallback</td><td data-label="When">Once, when you click Download</td></tr>
+          <tr><th scope="row">Update check</th><td data-label="Goes to">GitHub Pages</td><td data-label="When">On a schedule. Turn it off in Settings → Updates</td></tr>
+          <tr><th scope="row">Update download</th><td data-label="Goes to">GitHub Releases</td><td data-label="When">Only after you click Install</td></tr>
+        </tbody>
+      </table>
+      <p class="table-note">The update check sends your IP address and app version, nothing about your Mac. Nothing installs until you click.</p>
+    </div>
+
+    <p class="page-note">This page plays by the same rules: no analytics, no trackers, nothing loaded from anyone else. Open your browser’s network panel and look.</p>
+  </section>
+
+  <section class="wrap section" aria-labelledby="compare-title">
+    <div class="section-head">
+      <h2 id="compare-title">Measured in public, losses included</h2>
+      <p>200 public recordings through each app on one MacBook Pro M4 Pro. The data, the scripts and every raw output are published.</p>
+    </div>
+    <ul class="findings">
+      <li><strong>Same words as Handy.</strong> Both run the same Parakeet model file and produced identical text on all 200 recordings.</li>
+      <li><strong>Steadier on a busy Mac.</strong> With every core kept busy, a short file took a median 0.51&nbsp;s in OpenRamble and 1.13&nbsp;s in Handy. On an idle Mac the two are close.</li>
+      <li><strong>Whisper made fewer errors.</strong> whisper.cpp with Large v3 Turbo had a lower word error rate in both languages on this sample.</li>
+    </ul>
+    <!-- SCORECARD: replace this table with the public scorecard when it is published. -->
+    <div class="table-wrap">
+      <table class="stack">
+        <caption class="sr-only">Benchmark results by app</caption>
+        <thead>
+          <tr><th scope="col">App</th><th scope="col">English WER</th><th scope="col">Russian WER</th><th scope="col">Short file, busy Mac</th><th scope="col">An hour of English</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ours"><th scope="row">OpenRamble <small>0.32 · Parakeet v3</small></th><td class="num" data-label="English WER">5.57%</td><td class="num" data-label="Russian WER">5.95%</td><td class="num" data-label="Short file, busy Mac">0.51 s</td><td class="num" data-label="An hour of English">done in 43 s</td></tr>
+          <tr><th scope="row">Handy <small>0.9.8 · same Parakeet v3</small></th><td class="num" data-label="English WER">5.57%</td><td class="num" data-label="Russian WER">5.95%</td><td class="num" data-label="Short file, busy Mac">1.13 s</td><td data-label="An hour of English">Failed 12 of 12, Metal memory error</td></tr>
+          <tr><th scope="row">Superwhisper <small>2.19.2 · local Whisper Turbo</small></th><td class="num" data-label="English WER">5.94%</td><td class="num" data-label="Russian WER">5.42%</td><td class="na" data-label="Short file, busy Mac">not comparable</td><td class="na" data-label="An hour of English">not run</td></tr>
+          <tr><th scope="row">whisper.cpp <small>1.9.5 · Large v3 Turbo</small></th><td class="num" data-label="English WER">5.10%</td><td class="num" data-label="Russian WER">5.15%</td><td class="num" data-label="Short file, busy Mac">1.77 s</td><td class="na" data-label="An hour of English">not run</td></tr>
+          <tr><th scope="row">Wispr Flow</th><td class="na span" colspan="4">Not measured</td></tr>
+          <tr><th scope="row">macOS dictation</th><td class="na span" colspan="4">Not measured</td></tr>
+        </tbody>
+      </table>
+      <p class="table-note prose">Word error rate on 100 FLEURS recordings per language, lower is better. Busy Mac: whole command-line run on a short file while 14 processes load the CPU, median of 36. File transcription, not live dictation. Handy’s other models were not tested; Superwhisper’s own timer measures something different, so it is left out of speed. Measured 9 October 2026, macOS 27.0.1. <a href="https://github.com/mikwiseman/openramble/tree/main/research/product-benchmark-2026-10">Method, data and raw outputs</a>.</p>
+    </div>
+  </section>
+
+  <section class="wrap section pair" aria-label="Limits and credits">
+    <div>
+      <h2 class="small-h" id="limits-title">Limits</h2>
+      <ul class="limits">
+        <li><strong>About 25 European languages,</strong> English, Russian, German, French, Spanish and Ukrainian among them. Chinese, Japanese and Korean are not supported.</li>
+        <li><strong>Mac first.</strong> macOS 14 or later. Built for Apple Silicon; Intel runs recognition on the processor and is experimental.</li>
+        <li><strong>Long mixed-language recordings are weak.</strong> An hour alternating Russian and English came out at 39% word error rate. We are working on it.</li>
+        <li><strong>Public beta.</strong> The speech model takes about 740 MB and downloads once.</li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="small-h">Credits</h2>
+      <p class="credits prose">OpenRamble stands on <a href="https://github.com/handy-computer/transcribe.cpp">transcribe.cpp</a> by CJ Pais, who also makes <a href="https://handy.computer">Handy</a>, and on NVIDIA’s <a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3">Parakeet TDT 0.6B v3</a> speech model, licensed CC BY 4.0. Updates come through <a href="https://sparkle-project.org">Sparkle</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap footer">
+  <p class="footer-line" aria-label="That's it."><span class="cut-word" aria-hidden="true">Um,</span> <span aria-hidden="true">that’s it.</span></p>
+  <div class="footer-row">
+    <span>OpenRamble · MIT license · made by <a class="link" href="https://waiwai.is">WaiWai</a></span>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="https://github.com/mikwiseman/openramble">Source</a>
+      <a href="https://github.com/mikwiseman/openramble/issues">Report a bug</a>
+      <a href="https://github.com/mikwiseman/openramble/releases/latest">Releases</a>
+      <a href="https://waiwai.is/ramble" hreflang="ru" lang="ru">По-русски</a>
+    </nav>
+  </div>
+  <p class="fine">The OpenRamble name and icon are not covered by the MIT license. Manrope is licensed under the <a class="link" href="fonts/Manrope-OFL.txt">SIL Open Font License</a>.</p>
+</footer>
+
+<script>
+(() => {
+  // Each token: [text, kind, glued]. kind 1 = filler or stutter, 2 = removed by
+  // "scratch that", 3 = the command itself. glued = no space before it.
+  const EXAMPLES = [
+    {
+      heard: [["um,", 1], ["so", 2], ["the", 2], ["the", 1], ["deploy", 2], ["failed,", 2], ["uh,", 1], ["scratch", 3], ["that.", 3], ["The"], ["deploy"], ["passed."]],
+      typed: "The deploy passed.",
+      said: "um, so the the deploy failed, uh, scratch that. The deploy passed."
+    },
+    {
+      heard: [["Don’t"], [",", 1, true], ["uh,", 1], ["deploy"], ["on"], ["Friday."]],
+      typed: "Don’t deploy on Friday.",
+      said: "Don’t, uh, deploy on Friday."
+    }
+  ];
+  const WORD_MS = 240;
+  const demo = document.getElementById("demo");
+  const key = document.getElementById("demo-key");
+  const heard = document.getElementById("demo-heard");
+  const typed = document.getElementById("demo-typed");
+  const typedText = typed.querySelector(".typed-text");
+  const status = document.getElementById("demo-status");
+  const caption = document.getElementById("demo-caption");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  const onMac = /Mac/.test(navigator.platform || navigator.userAgent);
+  const IDLE = onMac ? "Hold this key, or your right ⌘" : "Hold the key to try it";
+
+  let timers = [];
+  let words = [];
+  let index = 0;
+  let shown = 0;
+  let phase = "done";
+  let auto = false;
+
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  const stop = () => { timers.forEach(clearTimeout); timers = []; };
+
+  function load(i) {
+    index = i;
+    const ex = EXAMPLES[i];
+    heard.textContent = "";
+    words = ex.heard.map(([text, kind, glued], n) => {
+      if (n > 0 && !glued) heard.append(" ");
+      const w = document.createElement("span");
+      const t = document.createElement("span");
+      w.className = "w";
+      w.dataset.kind = kind || 0;
+      t.textContent = text;
+      w.append(t);
+      heard.append(w);
+      return w;
+    });
+    typedText.textContent = ex.typed;
+    typed.classList.remove("is-on");
+    caption.textContent = "You say: “" + ex.said + "” OpenRamble types: “" + ex.typed + "”";
+    shown = 0;
+  }
+
+  function reveal() {
+    if (shown < words.length) {
+      words[shown++].classList.add("is-on");
+      later(reveal, WORD_MS);
+    }
+  }
+
+  function press(i) {
+    stop();
+    load(i);
+    phase = "listening";
+    demo.classList.add("is-held");
+    status.textContent = "Listening…";
+    reveal();
+  }
+
+  function release() {
+    if (phase !== "listening") return;
+    stop();
+    phase = "cleaning";
+    demo.classList.remove("is-held");
+    status.textContent = "Cleaning up…";
+    words.forEach(w => w.classList.add("is-on"));
+    const kind = k => words.filter(w => w.dataset.kind === String(k));
+    let t = 260;
+    kind(1).forEach(w => { later(() => w.classList.add("is-cut"), t); t += 260; });
+    const command = kind(3);
+    if (command.length) {
+      later(() => command.forEach(w => w.classList.add("is-cmd")), t);
+      t += 560;
+      [...kind(2), ...command].forEach((w, n) => later(() => w.classList.add("is-cut"), t + n * 50));
+      t += 380;
+    }
+    later(() => {
+      typed.classList.add("is-on");
+      status.textContent = "Typed at your cursor";
+      phase = "done";
+      if (auto && index < EXAMPLES.length - 1) {
+        later(() => play(index + 1), 3200);
+      } else {
+        auto = false;
+        later(() => { if (phase === "done") status.textContent = IDLE; }, 2600);
+      }
+    }, t + 200);
+  }
+
+  // Autoplay holds the key for as long as the words take, then lets go.
+  function play(i) {
+    press(i);
+    later(release, EXAMPLES[i].heard.length * WORD_MS + 520);
+  }
+
+  function userPress() {
+    if (phase === "listening") return;
+    auto = false;
+    press((index + 1) % EXAMPLES.length);
+  }
+
+  key.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    try { key.setPointerCapture(e.pointerId); } catch {}
+    userPress();
+  });
+  key.addEventListener("pointerup", release);
+  key.addEventListener("pointercancel", release);
+  key.addEventListener("contextmenu", e => e.preventDefault());
+  key.addEventListener("keydown", e => {
+    if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); userPress(); }
+  });
+  key.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") release(); });
+  // The real key works too: hold the right Command key anywhere on the page.
+  addEventListener("keydown", e => { if (e.code === "MetaRight" && !e.repeat) userPress(); });
+  addEventListener("keyup", e => { if (e.code === "MetaRight") release(); });
+  addEventListener("blur", release);
+
+  document.documentElement.classList.add("js");
+  load(0);
+  if (reduce.matches) {
+    words.forEach(w => w.classList.add("is-on", ...(w.dataset.kind !== "0" ? ["is-cut"] : [])));
+    typed.classList.add("is-on");
+    status.textContent = IDLE;
+    return;
+  }
+  status.textContent = "";
+  new IntersectionObserver((entries, io) => {
+    if (entries.some(e => e.isIntersecting)) {
+      io.disconnect();
+      auto = true;
+      play(0);
+    }
+  }, { threshold: 0.6 }).observe(demo);
+})();
+</script>
+</body>
+</html>
