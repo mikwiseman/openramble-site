@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenRamble: local dictation for Mac</title>
-<meta name="description" content="Hold a key, speak, let go. OpenRamble writes clean text at your cursor in any Mac app. Recognition runs on your Mac. Free and open source.">
+<meta name="description" content="Free, open-source dictation for Mac. Hold Right Command, speak, let go. Clean text lands at your cursor in any app. Your voice and text never leave your Mac.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f7f8fb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b0e14" media="(prefers-color-scheme: dark)">
-<!-- DOMAIN: openramble.app is a placeholder until the domain is bought. Update here, in og:*, and in CNAME. -->
+<meta name="theme-color" content="#f6f9fc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#060d19" media="(prefers-color-scheme: dark)">
+<!-- DOMAIN: openramble.app is a placeholder until the domain is bought and resolves.
+     Update it here, in og:*, and in CNAME. -->
 <link rel="canonical" href="https://openramble.app/">
 <link rel="alternate" hreflang="en" href="https://openramble.app/">
 <link rel="alternate" hreflang="ru" href="https://waiwai.is/ramble">
@@ -18,7 +19,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OpenRamble">
 <meta property="og:title" content="OpenRamble: local dictation for Mac">
-<meta property="og:description" content="Dictation that cleans your ums, not your meaning. Recognition runs on your Mac. Free and open source.">
+<meta property="og:description" content="Dictation that cleans your ums, not your meaning. Free and open source. Your voice and text never leave your Mac.">
 <meta property="og:url" content="https://openramble.app/">
 <meta property="og:image" content="https://openramble.app/app-icon.png">
 <meta property="og:image:width" content="1024">
@@ -27,11 +28,11 @@
 <meta name="twitter:card" content="summary">
 <style>
 /* Hallmark · macrostructure: bespoke (demo-led hero → typographic feature list → proof) · tone: technical, plain, one playful motif
- * theme: custom (vibe: "brand midnight blue, ink on paper, struck-through ums")
- * paper oklch(98% 0.005 250) / dark oklch(14% 0.014 252) · accent oklch(52% 0.19 256) / dark oklch(72% 0.16 250) blue
+ * theme: custom (vibe: "midnight blue, ink on paper, struck-through ums")
+ * paper oklch(98% 0.005 250) / dark oklch(16% 0.028 258) · accent oklch(52% 0.19 256) / dark oklch(72% 0.16 250) blue
  * display + body: Manrope (self-hosted, OFL) · data: system monospace · axes: light+dark / geometric-sans / cool
- * nav: N9 edge-aligned · footer: Ft5 statement · enrichment: interactive type demo (Tier A, CSS + 120 lines of JS)
- * pre-emit critique: P5 H5 E5 S5 R5 V4
+ * nav: N9 edge-aligned · footer: Ft5 statement · enrichment: interactive type demo (Tier A, CSS + JS)
+ * The accent is reserved for the strike, the caret, the live bars and links.
  * No third-party requests: fonts are local, there is no analytics, no tracker, no CDN.
  */
 
@@ -61,10 +62,10 @@
   --color-muted: oklch(43% 0.02 254);
   --color-faint: oklch(51% 0.018 252);
   --color-accent: oklch(52% 0.19 256);
-  --color-accent-quiet: oklch(93.5% 0.035 250);
   --color-focus: oklch(55% 0.2 256);
   --color-key: oklch(99% 0.003 250);
   --color-key-edge: oklch(80% 0.014 250);
+  --color-icon-ring: oklch(89% 0.011 250);
 
   --font-display: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -76,6 +77,7 @@
   --text-md: 1.25rem;
   --text-lg: 1.5625rem;
   --text-xl: clamp(1.75rem, 1.3rem + 1.6vw, 2.441rem);
+  --text-2xl: clamp(2rem, 1.4rem + 2.2vw, 3.25rem);
   --text-demo: clamp(1.3rem, 1.05rem + 0.9vw, 1.8rem);
   --text-display: clamp(2.3rem, 1.2rem + 5vw, 5.4rem);
 
@@ -103,18 +105,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-paper: oklch(14% 0.014 252);
-    --color-paper-2: oklch(18% 0.018 252);
-    --color-rule: oklch(28% 0.022 252);
-    --color-rule-strong: oklch(40% 0.03 252);
+    --color-paper: oklch(16% 0.028 258);
+    --color-paper-2: oklch(20% 0.034 258);
+    --color-rule: oklch(29% 0.036 258);
+    --color-rule-strong: oklch(40% 0.04 258);
     --color-ink: oklch(95% 0.008 252);
     --color-muted: oklch(77% 0.016 252);
     --color-faint: oklch(66% 0.02 252);
     --color-accent: oklch(72% 0.16 250);
-    --color-accent-quiet: oklch(26% 0.07 250);
     --color-focus: oklch(78% 0.17 250);
-    --color-key: oklch(24% 0.02 252);
-    --color-key-edge: oklch(9% 0.012 252);
+    --color-key: oklch(25% 0.035 258);
+    --color-key-edge: oklch(10% 0.025 258);
+    --color-icon-ring: transparent;
   }
 }
 
@@ -128,7 +130,6 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: 1.6;
-  font-feature-settings: "ss01";
   -webkit-font-smoothing: antialiased;
 }
 @media (prefers-color-scheme: dark) { body { font-weight: 380; } }
@@ -145,7 +146,7 @@ h1, h2, h3 {
 }
 p { margin: 0; text-wrap: pretty; }
 a { color: inherit; }
-code, pre, kbd { font-family: var(--font-data); }
+code, pre { font-family: var(--font-data); }
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; border-radius: 4px; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -154,13 +155,11 @@ code, pre, kbd { font-family: var(--font-data); }
 
 .wrap { width: min(100% - 2rem, 74rem); margin-inline: auto; }
 
-/* Links inside running text */
 .prose a, .link {
   color: var(--color-accent);
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
-  transition: text-decoration-thickness var(--dur-micro) var(--ease-out);
 }
 .prose a:hover, .link:hover { text-decoration-thickness: 2px; }
 
@@ -184,7 +183,7 @@ code, pre, kbd { font-family: var(--font-data); }
   text-decoration: none;
   white-space: nowrap;
 }
-.mark img { width: 2.25rem; height: 2.25rem; border-radius: 0.55rem; }
+.mark img { width: 2.25rem; height: 2.25rem; border-radius: 0.55rem; box-shadow: 0 0 0 1px var(--color-icon-ring); }
 .nav-links { display: flex; align-items: center; gap: var(--space-2xs); }
 .nav-link {
   display: inline-flex;
@@ -198,7 +197,6 @@ code, pre, kbd { font-family: var(--font-data); }
   font-weight: 650;
   text-decoration: none;
   white-space: nowrap;
-  transition: color var(--dur-short) var(--ease-out);
 }
 .nav-link:hover { color: var(--color-ink); }
 .nav-link svg { width: 1.125rem; height: 1.125rem; flex: none; }
@@ -214,7 +212,6 @@ code, pre, kbd { font-family: var(--font-data); }
   gap: var(--space-xs);
   min-height: 3.25rem;
   padding-inline: var(--space-lg);
-  border: 0;
   border-radius: var(--radius-sm);
   background: var(--color-ink);
   color: var(--color-paper);
@@ -231,7 +228,7 @@ code, pre, kbd { font-family: var(--font-data); }
 .button svg { width: 1.1rem; height: 1.1rem; flex: none; }
 
 /* ── Hero ──────────────────────────────────────────── */
-.hero { padding-top: clamp(var(--space-xl), 6vw, 5.5rem); }
+.hero { padding-top: clamp(1.5rem, 4vw, 3.5rem); }
 .hero h1 {
   max-width: 15ch;
   font-size: var(--text-display);
@@ -239,8 +236,8 @@ code, pre, kbd { font-family: var(--font-data); }
   line-height: 0.98;
   letter-spacing: -0.045em;
 }
-/* The one playful motif of the page: the word the product deletes is
-   struck through, in the same accent line the demo uses below. */
+/* The one motif of the page: the word the product deletes is struck through,
+   in the same accent line the demo uses. */
 .cut-word { position: relative; white-space: nowrap; }
 .cut-word::after {
   content: "";
@@ -266,9 +263,14 @@ code, pre, kbd { font-family: var(--font-data); }
 @media (min-width: 60rem) {
   .hero-grid {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: var(--space-2xl);
-    margin-top: var(--space-2xl);
+    grid-template-areas: "lede demo" "get demo";
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-2xl);
+    row-gap: var(--space-xl);
   }
+  .lede { grid-area: lede; }
+  .demo { grid-area: demo; }
+  .get { grid-area: get; }
 }
 .lede {
   max-width: 34ch;
@@ -277,32 +279,23 @@ code, pre, kbd { font-family: var(--font-data); }
   line-height: 1.5;
 }
 .lede strong { color: var(--color-ink); font-weight: 700; }
-.get { display: grid; gap: var(--space-md); margin-top: var(--space-xl); justify-items: start; }
-.get-meta { color: var(--color-faint); font-size: var(--text-sm); line-height: 1.5; }
-.brew {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs) var(--space-sm);
-  color: var(--color-faint);
-  font-size: var(--text-sm);
-}
-.brew code { color: var(--color-muted); overflow-wrap: anywhere; }
+.get { display: grid; gap: var(--space-md); justify-items: start; }
+.get-meta { color: var(--color-faint); font-size: var(--text-sm); line-height: 1.55; }
 
-/* Release tag, shared by features that have not shipped yet. */
+/* Tag for things that have not shipped. Neutral on purpose: blue is the strike's. */
 .soon {
   display: inline-block;
-  padding: 0.1em 0.55em 0.15em;
+  padding: 0.05em 0.5em 0.1em;
+  border: var(--rule-hair) solid var(--color-rule-strong);
   border-radius: 999px;
-  background: var(--color-accent-quiet);
-  color: var(--color-accent);
+  color: var(--color-muted);
   font-family: var(--font-data);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   line-height: 1.5;
   white-space: nowrap;
-  vertical-align: 0.2em;
+  vertical-align: 0.25em;
 }
 
 /* ── Demo ──────────────────────────────────────────── */
@@ -314,7 +307,8 @@ code, pre, kbd { font-family: var(--font-data); }
   background: var(--color-paper-2);
 }
 @media (min-width: 48rem) { .demo { padding: var(--space-xl); } }
-.demo-head { display: flex; align-items: center; gap: var(--space-md); min-height: 3.5rem; }
+.demo-head { display: flex; align-items: center; gap: var(--space-md); min-height: 3.6rem; }
+html:not(.js) .demo-head { display: none; }
 .key {
   position: relative;
   flex: none;
@@ -337,7 +331,7 @@ code, pre, kbd { font-family: var(--font-data); }
 .key:hover { border-color: var(--color-faint); }
 .key-glyph { position: absolute; top: 0.3rem; right: 0.5rem; font-size: 0.95rem; line-height: 1; }
 .key-name { position: absolute; bottom: 0.35rem; left: 0.5rem; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.01em; line-height: 1; }
-.demo.is-held .key { transform: translateY(2px); box-shadow: 0 1px 0 var(--color-key-edge); }
+.demo.is-held .key { transform: translateY(3px); box-shadow: 0 0 0 var(--color-key-edge); border-color: var(--color-ink); }
 
 .demo-status {
   display: flex;
@@ -349,22 +343,29 @@ code, pre, kbd { font-family: var(--font-data); }
   font-size: var(--text-sm);
   line-height: 1.35;
 }
+/* At rest the bars echo the icon's waveform; they only move while listening. */
 .bars { display: inline-flex; align-items: center; gap: 3px; height: 1.1rem; flex: none; }
 .bars span {
   width: 3px;
   height: 100%;
   border-radius: 2px;
   background: var(--color-faint);
-  transform: scaleY(0.35);
+  transform: scaleY(var(--rest));
   transition: transform var(--dur-short) var(--ease-out);
 }
+.bars span:nth-child(1) { --rest: 0.35; }
+.bars span:nth-child(2) { --rest: 0.6; }
+.bars span:nth-child(3) { --rest: 1; }
+.bars span:nth-child(4) { --rest: 0.7; }
+.bars span:nth-child(5) { --rest: 0.45; }
 .demo.is-held .bars span { background: var(--color-accent); animation: level 640ms var(--ease-in-out) infinite alternate; }
 .demo.is-held .bars span:nth-child(2) { animation-delay: -160ms; animation-duration: 520ms; }
 .demo.is-held .bars span:nth-child(3) { animation-delay: -320ms; animation-duration: 700ms; }
 .demo.is-held .bars span:nth-child(4) { animation-delay: -80ms; animation-duration: 580ms; }
 .demo.is-held .bars span:nth-child(5) { animation-delay: -240ms; animation-duration: 660ms; }
-@keyframes level { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+@keyframes level { from { transform: scaleY(0.25); } to { transform: scaleY(1); } }
 
+.demo-text { position: relative; }
 .demo-label {
   margin-top: var(--space-lg);
   color: var(--color-faint);
@@ -379,13 +380,14 @@ code, pre, kbd { font-family: var(--font-data); }
   line-height: 1.35;
   letter-spacing: -0.02em;
 }
-.heard { min-height: calc(3 * 1.35em); color: var(--color-muted); }
+.heard { min-height: calc(3 * 1.35em); color: var(--color-ink); }
 @media (min-width: 48rem) { .heard { min-height: calc(2 * 1.35em); } }
-.typed { min-height: 1.35em; color: var(--color-ink); font-weight: 750; }
+.typed { min-height: 1.35em; color: var(--color-ink); font-weight: 780; }
 .typed-row { margin-top: var(--space-lg); padding-top: var(--space-xs); border-top: var(--rule-hair) solid var(--color-rule); }
+.demo-note { margin-top: var(--space-lg); color: var(--color-faint); font-size: var(--text-xs); line-height: 1.5; }
 
 .w { position: relative; display: inline-block; }
-.w > span { display: inline-block; transition: opacity var(--dur-long) var(--ease-out), transform var(--dur-short) var(--ease-out); }
+.w > span { display: inline-block; transition: opacity var(--dur-long) var(--ease-out), transform var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); }
 .w::after {
   content: "";
   position: absolute;
@@ -401,7 +403,7 @@ code, pre, kbd { font-family: var(--font-data); }
 }
 .js .w > span { opacity: 0; transform: translateY(0.18em); }
 .js .w.is-on > span { opacity: 1; transform: none; }
-.w.is-cut > span, .js .w.is-cut > span { opacity: 0.38; }
+.w.is-cut > span { color: var(--color-faint); }
 .w.is-cut::after { transform: scaleX(1); }
 .w.is-cmd > span { color: var(--color-accent); }
 
@@ -423,12 +425,20 @@ code, pre, kbd { font-family: var(--font-data); }
 .section-head { display: grid; gap: var(--space-md); max-width: 44rem; }
 .section-head h2 { font-size: var(--text-xl); font-weight: 780; }
 .section-head p { color: var(--color-muted); font-size: var(--text-md); line-height: 1.5; max-width: 38ch; }
+/* Feature sections lead with product names, so their heading is a quiet label. */
+.label-h {
+  color: var(--color-faint);
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+}
 
-/* Features: a typographic list, not cards. */
 .feats {
   display: grid;
   gap: 0 var(--space-2xl);
-  margin: var(--space-xl) 0 0;
+  margin: var(--space-md) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -436,13 +446,19 @@ code, pre, kbd { font-family: var(--font-data); }
 .feat { padding-block: var(--space-lg) var(--space-xl); border-top: var(--rule-hair) solid var(--color-rule); }
 .feat h3 { font-size: var(--text-lg); font-weight: 750; letter-spacing: -0.03em; line-height: 1.15; }
 .feat h3 .soon { margin-left: var(--space-xs); }
-.feat.lead { grid-column: 1 / -1; }
-.feat.lead h3 { font-size: var(--text-xl); }
-.feat.lead p { max-width: 56ch; font-size: var(--text-md); line-height: 1.55; }
-.feat.lead p.spec { font-size: var(--text-sm); }
 .feat p { margin-top: var(--space-sm); color: var(--color-muted); max-width: 46ch; }
 .feat p.note { color: var(--color-faint); font-size: var(--text-sm); }
-.feat p.spec { max-width: none; }
+.feat.lead { grid-column: 1 / -1; padding-block: var(--space-xl) var(--space-2xl); }
+.feat.lead h3 { font-size: var(--text-2xl); font-weight: 800; letter-spacing: -0.04em; }
+.feat.lead h3 .soon { vertical-align: 0.6em; }
+.feat.lead > p:not(.note) { max-width: 56ch; margin-top: var(--space-md); font-size: var(--text-md); line-height: 1.55; }
+
+/* The Clean Verbatim proof, set like the demo. */
+.proof { display: grid; gap: var(--space-sm); margin-top: var(--space-lg); }
+.proof p { margin: 0; max-width: none; color: var(--color-ink); font-size: var(--text-demo); font-weight: 650; letter-spacing: -0.02em; line-height: 1.35; }
+.proof .w > span { opacity: 1; transform: none; }
+.proof-note { display: block; margin-top: var(--space-2xs); color: var(--color-faint); font-size: var(--text-sm); font-weight: 500; letter-spacing: 0; }
+
 .spec {
   margin: var(--space-md) 0 0;
   color: var(--color-ink);
@@ -452,9 +468,10 @@ code, pre, kbd { font-family: var(--font-data); }
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.feat p.spec { max-width: none; color: var(--color-ink); }
 .spec .from { display: block; color: var(--color-faint); }
 .spec .to { display: block; }
-.spec .to::before { content: "→ "; color: var(--color-accent); }
+.spec .to::before { content: "→ "; color: var(--color-faint); }
 
 /* Verify */
 .checks { margin: var(--space-xl) 0 0; padding: 0; list-style: none; counter-reset: check; }
@@ -471,14 +488,14 @@ code, pre, kbd { font-family: var(--font-data); }
   content: counter(check);
   display: inline-block;
   min-width: 1.6em;
-  color: var(--color-accent);
+  color: var(--color-faint);
   font-family: var(--font-data);
   font-size: 0.7em;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   vertical-align: 0.12em;
 }
-.check-body { display: grid; gap: var(--space-sm); color: var(--color-muted); }
+.check-body { display: grid; gap: var(--space-md); min-width: 0; color: var(--color-muted); }
 .check-body p { max-width: 54ch; }
 .cmd {
   margin: 0;
@@ -487,47 +504,46 @@ code, pre, kbd { font-family: var(--font-data); }
   background: var(--color-paper-2);
   color: var(--color-ink);
   font-size: var(--text-sm);
-  line-height: 1.6;
+  line-height: 1.7;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-/* Tables that become stacked blocks on phones */
-.table-wrap { margin-top: var(--space-xl); }
+/* Tables become stacked blocks on phones. */
 table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-.table-note { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-sm); line-height: 1.55; max-width: 72rem; }
 th, td { padding: var(--space-sm) var(--space-md) var(--space-sm) 0; border-bottom: var(--rule-hair) solid var(--color-rule); text-align: left; vertical-align: top; }
 thead th { color: var(--color-faint); font-family: var(--font-data); font-size: var(--text-xs); font-weight: 500; line-height: 1.4; }
 tbody th { font-weight: 700; color: var(--color-ink); }
 tbody th small { display: block; color: var(--color-faint); font-weight: 500; font-size: var(--text-xs); }
 td { color: var(--color-muted); }
-.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--color-ink); white-space: nowrap; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.best { color: var(--color-ink); font-weight: 700; }
 .na { color: var(--color-faint); }
-tr.ours th, tr.ours td.num { color: var(--color-accent); }
+.table-wrap { margin-top: var(--space-xl); }
+.table-note { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-sm); line-height: 1.55; max-width: 72rem; }
 @media (max-width: 47.99rem) {
   table.stack, .stack tbody, .stack tr, .stack th, .stack td { display: block; }
   .stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .stack tr { padding-block: var(--space-md); border-bottom: var(--rule-hair) solid var(--color-rule); }
   .stack th, .stack td { padding: 0; border: 0; }
   .stack tbody th { margin-bottom: var(--space-xs); font-size: var(--text-base); }
-  .stack td { display: flex; justify-content: space-between; gap: var(--space-md); padding-block: 0.2rem; text-align: right; }
-  .stack td::before { content: attr(data-label); color: var(--color-faint); font-family: var(--font-data); font-size: var(--text-xs); line-height: 2; }
-  .stack td.span { display: block; }
-  .stack td.span::before { content: none; }
-  .stack td .num { white-space: normal; text-align: right; }
+  .stack td { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-md); padding-block: 0.2rem; text-align: right; }
+  .stack td::before {
+    content: attr(data-label);
+    content: attr(data-label) / "";
+    flex: none;
+    color: var(--color-faint);
+    font-family: var(--font-data);
+    font-size: var(--text-xs);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .stack td .num { white-space: normal; }
 }
 
 .findings { display: grid; gap: var(--space-md); margin: var(--space-xl) 0 0; padding: 0; list-style: none; max-width: 46rem; }
 .findings li { color: var(--color-muted); }
 .findings strong { color: var(--color-ink); font-weight: 700; }
-
-.page-note {
-  margin-top: var(--space-xl);
-  padding-left: var(--space-md);
-  border-left: 2px solid var(--color-accent);
-  color: var(--color-muted);
-  max-width: 52ch;
-}
 
 /* Limits and credits */
 .pair { display: grid; gap: var(--space-2xl); }
@@ -547,7 +563,8 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
   line-height: 1;
   letter-spacing: -0.045em;
 }
-.footer-line .cut-word::after { top: 46%; animation: none; transform: scaleX(1); }
+.footer-line .cut-word::after { top: 46%; animation: none; transform: scaleX(1); transition: transform 520ms var(--ease-out); }
+.js .footer-line:not(.is-drawn) .cut-word::after { transform: scaleX(0); }
 .footer-row {
   display: flex;
   flex-wrap: wrap;
@@ -570,8 +587,9 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     animation-delay: 0ms !important;
-    transition-duration: 150ms !important;
+    transition-duration: 0s !important;
   }
+  .w > span, .w::after, .typed-text { transition-duration: 150ms !important; }
   .js .w > span, .w::after { transform: none; }
   .w::after { opacity: 0; transition-property: opacity; }
   .w.is-cut::after { opacity: 1; }
@@ -595,29 +613,17 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
 </header>
 
 <main>
-  <!-- SHIP GATE: the headline and the demo below describe Clean Verbatim, which has
-       not shipped yet (see the features list). Publish the site only after it ships. -->
+  <!-- SHIP GATE: the headline and the demo describe Clean Verbatim
+       (openramble PR #73, not released yet). Publish the site only after it ships. -->
   <section class="wrap hero" aria-labelledby="title">
     <h1 id="title">Dictation that cleans your <span class="cut-word">ums</span>, not your meaning.</h1>
 
     <div class="hero-grid">
-      <div>
-        <p class="lede">Hold <strong>Right&nbsp;⌘</strong>, speak, let go. Clean text lands at your cursor in any Mac app. Recognition runs on your Mac. Free and open source.</p>
-        <div class="get">
-          <!-- DOWNLOAD: points at the latest GitHub release for now. Swap for a stable DMG URL when it exists. -->
-          <a class="button" href="https://github.com/mikwiseman/openramble/releases/latest">
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>
-            Download for Mac
-          </a>
-          <p class="get-meta">Free · macOS 14 or later · Apple Silicon, Intel experimental<br>Signed and notarized by Apple. Public beta.</p>
-          <!-- SOON: Homebrew cask. When it ships, delete the .soon tag below. -->
-          <p class="brew"><code>brew install --cask openramble</code> <span class="soon">coming soon</span></p>
-        </div>
-      </div>
+      <p class="lede">Free, open-source dictation for Mac. Hold <strong>Right&nbsp;⌘</strong>, speak, let go. Clean text lands at your cursor in any app. Your voice and text never leave your Mac.</p>
 
-      <figure class="demo" id="demo" aria-describedby="demo-caption">
+      <figure class="demo" id="demo">
         <div class="demo-head">
-          <button class="key" id="demo-key" type="button" aria-label="Play the demo again">
+          <button class="key" id="demo-key" type="button" aria-label="Command key: play the demo">
             <span class="key-glyph" aria-hidden="true">⌘</span>
             <span class="key-name" aria-hidden="true">command</span>
           </button>
@@ -626,42 +632,56 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
             <span id="demo-status">Hold the key to try it</span>
           </p>
         </div>
-        <div aria-hidden="true">
+        <div class="demo-text" aria-hidden="true">
           <p class="demo-label">Heard</p>
           <!-- Static final state, so the page reads correctly without JavaScript. -->
-          <p class="heard" id="demo-heard"><span class="w is-on is-cut"><span>um,</span></span> <span class="w is-on is-cut"><span>so</span></span> <span class="w is-on is-cut"><span>the</span></span> <span class="w is-on is-cut"><span>the</span></span> <span class="w is-on is-cut"><span>deploy</span></span> <span class="w is-on is-cut"><span>failed,</span></span> <span class="w is-on is-cut"><span>uh,</span></span> <span class="w is-on is-cut"><span>scratch</span></span> <span class="w is-on is-cut"><span>that.</span></span> <span class="w is-on"><span>The</span></span> <span class="w is-on"><span>deploy</span></span> <span class="w is-on"><span>passed.</span></span></p>
+          <p class="heard" id="demo-heard"><span class="w is-on is-cut"><span>Um,</span></span> <span class="w is-on is-cut"><span>so</span></span> <span class="w is-on is-cut"><span>that</span></span> <span class="w is-on is-cut"><span>the</span></span> <span class="w is-on is-cut"><span>deploy</span></span> <span class="w is-on is-cut"><span>failed,</span></span> <span class="w is-on is-cut"><span>uh,</span></span> <span class="w is-on is-cut"><span>scratch</span></span> <span class="w is-on is-cut"><span>that,</span></span> <span class="w is-on"><span>the</span></span> <span class="w is-on"><span>deploy</span></span> <span class="w is-on"><span>passed.</span></span></p>
           <div class="typed-row">
             <p class="demo-label">Typed</p>
             <p class="typed is-on" id="demo-typed"><span class="typed-text">The deploy passed.</span><span class="caret"></span></p>
           </div>
         </div>
-        <figcaption class="sr-only" id="demo-caption">You say: “um, so the the deploy failed, uh, scratch that. The deploy passed.” OpenRamble types: “The deploy passed.”</figcaption>
+        <p class="demo-note">Real model transcripts of synthesized speech, cleaned by Clean Verbatim.</p>
+        <p class="sr-only" id="demo-live" aria-live="polite"></p>
+        <figcaption class="sr-only" id="demo-caption">You say: “Um, so that the deploy failed, uh, scratch that, the deploy passed.” OpenRamble types: “The deploy passed.”</figcaption>
       </figure>
+
+      <div class="get">
+        <!-- DOWNLOAD: points at the latest GitHub release for now. Swap for a stable DMG URL when it exists. -->
+        <a class="button" href="https://github.com/mikwiseman/openramble/releases/latest">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>
+          Download for Mac
+        </a>
+        <p class="get-meta">Free public beta · macOS 14 or later · Signed and notarized<br>One 740 MB download, then two permissions: Microphone and Accessibility.</p>
+        <!-- SOON: Homebrew cask. When it ships, put this back under .get-meta:
+        <p class="get-meta"><code>brew install --cask openramble</code></p> -->
+      </div>
     </div>
   </section>
 
   <!--
     FEATURE TOGGLES. A feature that has not shipped carries data-soon and a
     <span class="soon">coming soon</span> tag. When it ships, delete both.
-      Clean Verbatim ........ soon
+      Clean Verbatim ........ soon (PR #73)
       As spoken ............. soon
       "Send it." ............ soon
-      Shift → English ....... soon
+      Shift for English ..... soon
       Any app, clipboard .... shipped
       Meeting recorder ...... shipped
       Screen recording ...... shipped
       Command line .......... shipped
   -->
   <section class="wrap section" aria-labelledby="dictation-title">
-    <div class="section-head">
-      <h2 id="dictation-title">Dictation</h2>
-      <p>Talk the way you talk. Get the words you meant, and nothing you didn’t say.</p>
-    </div>
+    <h2 class="label-h" id="dictation-title">Dictation</h2>
     <ul class="feats">
       <li class="feat lead" data-soon>
         <h3>Clean Verbatim <span class="soon">coming soon</span></h3>
-        <p>Deletes ums, uhs and stutters, and drops the sentence before “scratch that.” It only ever deletes. It never paraphrases you or changes what you meant.</p>
-        <p class="spec"><span class="from">I I think we should, um, ship it.</span><span class="to">I think we should ship it.</span></p>
+        <p>Deletes ums, uhs, stutters and whatever you take back with “scratch that.” It only ever deletes, so it never rewords you. Doubles that mean something, like “very very”, stay. Code in backticks, paths and identifiers are never touched.</p>
+        <div class="proof" aria-hidden="true">
+          <p>We should<span class="w is-on is-cut"><span>, um,</span></span> ship it on Friday.</p>
+          <p lang="de">Um 5 Uhr treffen wir uns im Büro. <span class="proof-note" lang="en">German “um” is a word, so it stays.</span></p>
+        </div>
+        <p class="sr-only">For example, “We should, um, ship it on Friday” becomes “We should ship it on Friday”, while the German <span lang="de">“Um 5 Uhr treffen wir uns im Büro”</span> stays as it is, because there “um” is a word.</p>
       </li>
       <li class="feat" data-soon>
         <h3>As spoken <span class="soon">coming soon</span></h3>
@@ -673,7 +693,7 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
       </li>
       <li class="feat" data-soon>
         <h3>Shift for English <span class="soon">coming soon</span></h3>
-        <p>Hold Shift with the dictation key and speak another language. English comes out, translated on your Mac by Apple’s on-device translation.</p>
+        <p>Hold Shift with the dictation key and speak another language. English comes out, translated on your Mac by Apple’s on-device translation. Needs macOS 26.4 or later and the language installed.</p>
         <p class="spec"><span class="from" lang="ru">Успеешь сегодня посмотреть пул-реквест?</span><span class="to">Can you look at the pull request today?</span></p>
       </li>
       <li class="feat">
@@ -684,10 +704,7 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
   </section>
 
   <section class="wrap section" aria-labelledby="recording-title">
-    <div class="section-head">
-      <h2 id="recording-title">Recording</h2>
-      <p>For when a sentence isn’t enough. Same model, same Mac.</p>
-    </div>
+    <h2 class="label-h" id="recording-title">Recording</h2>
     <ul class="feats">
       <li class="feat lead">
         <h3>Meeting recorder</h3>
@@ -700,7 +717,7 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
       </li>
       <li class="feat">
         <h3>Command line</h3>
-        <p>Transcribe files from the terminal with the model the app already installed. TXT, JSON, SRT or VTT. A skill for Claude Code and Codex comes with it.</p>
+        <p>Transcribe files from the terminal with the model the app already installed. TXT, JSON, SRT or VTT. A skill for Claude Code and Codex is in the repository.</p>
         <p class="spec">openramble interview.m4a --format srt &gt; interview.srt</p>
       </li>
     </ul>
@@ -715,40 +732,44 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
       <li class="check">
         <h3>Read the gate</h3>
         <div class="check-body prose">
-          <p>Every change runs <a href="https://github.com/mikwiseman/openramble/blob/main/scripts/check-network-surface.sh"><code>check-network-surface.sh</code></a> in <a href="https://github.com/mikwiseman/openramble/actions/workflows/ci.yml">CI</a>. The build fails if shipping code can reach the network anywhere except two declared places: model downloads and update checks.</p>
+          <p>Every change runs <a href="https://github.com/mikwiseman/openramble/blob/main/scripts/check-network-surface.sh"><code>check-network-surface.sh</code></a> in <a href="https://github.com/mikwiseman/openramble/actions/workflows/ci.yml">CI</a>. It fails the build if shipping code calls a network API outside two declared places: model downloads and updates.</p>
         </div>
       </li>
       <li class="check">
         <h3>Run it offline</h3>
         <div class="check-body">
-          <p>In a clone of the repository, with the model installed, run recognition in a sandbox where the network is denied. If anything tries to connect, the test fails.</p>
-          <pre class="cmd"><code>./scripts/test-zero-network.sh</code></pre>
+          <p>In a clone of the repository, with the model installed. The first runs recognition with the network blocked and checks the text. The second traces every network call and fails if recognition makes one.</p>
+          <pre class="cmd"><code>./scripts/test-zero-network.sh
+./scripts/test-zero-network-trace.sh</code></pre>
         </div>
       </li>
       <li class="check">
         <h3>Watch the wire</h3>
         <div class="check-body">
           <p>Open LuLu or Little Snitch and dictate. Recognition makes no connections. These three are the only ones the app ever makes:</p>
+          <div>
+            <table class="stack">
+              <caption class="sr-only">Every connection the app makes</caption>
+              <thead>
+                <tr><th scope="col">Connection</th><th scope="col">Goes to</th><th scope="col">When</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Model download</th><td data-label="Goes to">Hugging Face, GitHub as a fallback</td><td data-label="When">Once, when you click Download</td></tr>
+                <tr><th scope="row">Update check</th><td data-label="Goes to">GitHub Pages</td><td data-label="When">On a schedule. Turn it off in Settings → Updates</td></tr>
+                <tr><th scope="row">Update download</th><td data-label="Goes to">GitHub Releases</td><td data-label="When">Only after you click Install</td></tr>
+              </tbody>
+            </table>
+            <p class="table-note">The update check sends your IP address and app version, nothing about your Mac.</p>
+          </div>
+        </div>
+      </li>
+      <li class="check">
+        <h3>Check this page</h3>
+        <div class="check-body">
+          <p>No analytics, no trackers, nothing loaded from anyone else. Open your browser’s network panel and reload.</p>
         </div>
       </li>
     </ol>
-
-    <div class="table-wrap">
-      <table class="stack">
-        <caption class="sr-only">Every connection the app makes</caption>
-        <thead>
-          <tr><th scope="col">Connection</th><th scope="col">Goes to</th><th scope="col">When</th></tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">Model download</th><td data-label="Goes to">Hugging Face, GitHub as a fallback</td><td data-label="When">Once, when you click Download</td></tr>
-          <tr><th scope="row">Update check</th><td data-label="Goes to">GitHub Pages</td><td data-label="When">On a schedule. Turn it off in Settings → Updates</td></tr>
-          <tr><th scope="row">Update download</th><td data-label="Goes to">GitHub Releases</td><td data-label="When">Only after you click Install</td></tr>
-        </tbody>
-      </table>
-      <p class="table-note">The update check sends your IP address and app version, nothing about your Mac. Nothing installs until you click.</p>
-    </div>
-
-    <p class="page-note">This page plays by the same rules: no analytics, no trackers, nothing loaded from anyone else. Open your browser’s network panel and look.</p>
   </section>
 
   <section class="wrap section" aria-labelledby="compare-title">
@@ -757,38 +778,36 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
       <p>200 public recordings through each app on one MacBook Pro M4 Pro. The data, the scripts and every raw output are published.</p>
     </div>
     <ul class="findings">
-      <li><strong>Same words as Handy.</strong> Both run the same Parakeet model file and produced identical text on all 200 recordings.</li>
-      <li><strong>Steadier on a busy Mac.</strong> With every core kept busy, a short file took a median 0.51&nbsp;s in OpenRamble and 1.13&nbsp;s in Handy. On an idle Mac the two are close.</li>
+      <li><strong>Same words as Handy.</strong> Both run the same Parakeet model file and produced the same words on all 200 recordings.</li>
+      <li><strong>Steadier on a busy Mac.</strong> With every core kept busy, a short file took a median 0.51&nbsp;s in OpenRamble and 1.13&nbsp;s in Handy. Without the load, the two are close.</li>
       <li><strong>Whisper made fewer errors.</strong> whisper.cpp with Large v3 Turbo had a lower word error rate in both languages on this sample.</li>
     </ul>
-    <!-- SCORECARD: replace this table with the public scorecard when it is published. -->
+    <!-- SCORECARD: replace this table with the public scorecard when it is published.
+         The method link needs research/product-benchmark-2026-10 merged to main (openramble PR #72). -->
     <div class="table-wrap">
       <table class="stack">
-        <caption class="sr-only">Benchmark results by app</caption>
+        <caption class="sr-only">Benchmark results by app. The best value in each column is in bold.</caption>
         <thead>
           <tr><th scope="col">App</th><th scope="col">English WER</th><th scope="col">Russian WER</th><th scope="col">Short file, busy Mac</th><th scope="col">An hour of English</th></tr>
         </thead>
         <tbody>
-          <tr class="ours"><th scope="row">OpenRamble <small>0.32 · Parakeet v3</small></th><td class="num" data-label="English WER">5.57%</td><td class="num" data-label="Russian WER">5.95%</td><td class="num" data-label="Short file, busy Mac">0.51 s</td><td class="num" data-label="An hour of English">done in 43 s</td></tr>
-          <tr><th scope="row">Handy <small>0.9.8 · same Parakeet v3</small></th><td class="num" data-label="English WER">5.57%</td><td class="num" data-label="Russian WER">5.95%</td><td class="num" data-label="Short file, busy Mac">1.13 s</td><td data-label="An hour of English">Failed 12 of 12, Metal memory error</td></tr>
+          <tr><th scope="row">OpenRamble <small>0.32 · Parakeet v3</small></th><td class="num" data-label="English WER">5.57%</td><td class="num" data-label="Russian WER">5.95%</td><td class="num best" data-label="Short file, busy Mac">0.51 s</td><td class="num" data-label="An hour of English">43 s, 9.8% WER</td></tr>
+          <tr><th scope="row">Handy <small>0.9.8 · same Parakeet v3</small></th><td class="num" data-label="English WER">5.57%</td><td class="num" data-label="Russian WER">5.95%</td><td class="num" data-label="Short file, busy Mac">1.13 s</td><td data-label="An hour of English">Failed 4 of 4, Metal memory error</td></tr>
           <tr><th scope="row">Superwhisper <small>2.19.2 · local Whisper Turbo</small></th><td class="num" data-label="English WER">5.94%</td><td class="num" data-label="Russian WER">5.42%</td><td class="na" data-label="Short file, busy Mac">not comparable</td><td class="na" data-label="An hour of English">not run</td></tr>
-          <tr><th scope="row">whisper.cpp <small>1.9.5 · Large v3 Turbo</small></th><td class="num" data-label="English WER">5.10%</td><td class="num" data-label="Russian WER">5.15%</td><td class="num" data-label="Short file, busy Mac">1.77 s</td><td class="na" data-label="An hour of English">not run</td></tr>
-          <tr><th scope="row">Wispr Flow</th><td class="na span" colspan="4">Not measured</td></tr>
-          <tr><th scope="row">macOS dictation</th><td class="na span" colspan="4">Not measured</td></tr>
+          <tr><th scope="row">whisper.cpp <small>1.9.5 · Large v3 Turbo</small></th><td class="num best" data-label="English WER">5.10%</td><td class="num best" data-label="Russian WER">5.15%</td><td class="num" data-label="Short file, busy Mac">1.77 s</td><td class="na" data-label="An hour of English">not run</td></tr>
         </tbody>
       </table>
-      <p class="table-note prose">Word error rate on 100 FLEURS recordings per language, lower is better. Busy Mac: whole command-line run on a short file while 14 processes load the CPU, median of 36. File transcription, not live dictation. Handy’s other models were not tested; Superwhisper’s own timer measures something different, so it is left out of speed. Measured 9 October 2026, macOS 27.0.1. <a href="https://github.com/mikwiseman/openramble/tree/main/research/product-benchmark-2026-10">Method, data and raw outputs</a>.</p>
+      <p class="table-note prose">Bold is the best in each column. Word error rate on 100 FLEURS recordings per language, lower is better. Busy Mac: the whole command-line run on a short file while 14 processes load the CPU, median of 36. File transcription, not live dictation. Handy’s other models were not tested; Superwhisper’s own timer measures something different, so it is left out of speed. Wispr Flow and macOS dictation were not measured. Measured 9 October 2026, macOS 27.0.1. <a href="https://github.com/mikwiseman/openramble/tree/main/research/product-benchmark-2026-10">Method, data and raw outputs</a>.</p>
     </div>
   </section>
 
   <section class="wrap section pair" aria-label="Limits and credits">
     <div>
-      <h2 class="small-h" id="limits-title">Limits</h2>
+      <h2 class="small-h">Limits</h2>
       <ul class="limits">
-        <li><strong>About 25 European languages,</strong> English, Russian, German, French, Spanish and Ukrainian among them. Chinese, Japanese and Korean are not supported.</li>
-        <li><strong>Mac first.</strong> macOS 14 or later. Built for Apple Silicon; Intel runs recognition on the processor and is experimental.</li>
+        <li><strong>25 European languages,</strong> including English, Russian, German, French, Spanish and Ukrainian. Chinese, Japanese and Korean are not supported.</li>
+        <li><strong>Mac first.</strong> Built for Apple Silicon. Intel runs recognition on the processor and is experimental.</li>
         <li><strong>Long mixed-language recordings are weak.</strong> An hour alternating Russian and English came out at 39% word error rate. We are working on it.</li>
-        <li><strong>Public beta.</strong> The speech model takes about 740 MB and downloads once.</li>
       </ul>
     </div>
     <div>
@@ -799,7 +818,7 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
 </main>
 
 <footer class="wrap footer">
-  <p class="footer-line" aria-label="That's it."><span class="cut-word" aria-hidden="true">Um,</span> <span aria-hidden="true">that’s it.</span></p>
+  <p class="footer-line" id="footer-line"><span class="cut-word" aria-hidden="true">Um,</span> that’s it.</p>
   <div class="footer-row">
     <span>OpenRamble · MIT license · made by <a class="link" href="https://waiwai.is">WaiWai</a></span>
     <nav class="footer-links" aria-label="Footer">
@@ -814,18 +833,22 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
 
 <script>
 (() => {
+  // Real transcripts: what the shipping Parakeet model wrote for synthesized
+  // speech, and what Clean Verbatim inserted (openramble PR #73).
   // Each token: [text, kind, glued]. kind 1 = filler or stutter, 2 = removed by
   // "scratch that", 3 = the command itself. glued = no space before it.
   const EXAMPLES = [
     {
-      heard: [["um,", 1], ["so", 2], ["the", 2], ["the", 1], ["deploy", 2], ["failed,", 2], ["uh,", 1], ["scratch", 3], ["that.", 3], ["The"], ["deploy"], ["passed."]],
-      typed: "The deploy passed.",
-      said: "um, so the the deploy failed, uh, scratch that. The deploy passed."
+      heard: [["Um,", 1], ["so", 2], ["that", 2], ["the", 2], ["deploy", 2], ["failed,", 2], ["uh,", 1], ["scratch", 3], ["that,", 3], ["the"], ["deploy"], ["passed."]],
+      typed: "The deploy passed."
     },
     {
-      heard: [["Don’t"], [",", 1, true], ["uh,", 1], ["deploy"], ["on"], ["Friday."]],
-      typed: "Don’t deploy on Friday.",
-      said: "Don’t, uh, deploy on Friday."
+      heard: [["Uh,", 1], ["I"], ["need"], ["you"], ["to"], ["um,", 1], ["fix"], ["the"], ["login"], ["bug"], [",", 1, true], ["um,", 1], ["and"], ["then"], ["update"], ["the"], ["readme."]],
+      typed: "I need you to fix the login bug and then update the readme."
+    },
+    {
+      heard: [["We"], ["should"], [",", 1, true], ["um,", 1], ["ship"], ["it"], ["on"], ["Friday."], ["I", 1], ["I"], ["think"], ["that"], ["the"], ["tests"], ["are"], ["green"], [",", 1, true], ["uh,", 1], ["mostly."]],
+      typed: "We should ship it on Friday. I think that the tests are green mostly."
     }
   ];
   const WORD_MS = 240;
@@ -836,6 +859,7 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
   const typedText = typed.querySelector(".typed-text");
   const status = document.getElementById("demo-status");
   const caption = document.getElementById("demo-caption");
+  const live = document.getElementById("demo-live");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)");
   const onMac = /Mac/.test(navigator.platform || navigator.userAgent);
   const IDLE = onMac ? "Hold this key, or your right ⌘" : "Hold the key to try it";
@@ -846,28 +870,68 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
   let shown = 0;
   let phase = "done";
   let auto = false;
+  let observer = null;
 
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const stop = () => { timers.forEach(clearTimeout); timers = []; };
+  const said = ex => ex.heard.map(([text, , glued], n) => (n > 0 && !glued ? " " : "") + text).join("");
 
-  function load(i) {
-    index = i;
-    const ex = EXAMPLES[i];
-    heard.textContent = "";
-    words = ex.heard.map(([text, kind, glued], n) => {
-      if (n > 0 && !glued) heard.append(" ");
+  // Builds the word spans. A glued token shares a no-wrap box with the word
+  // before it, so a comma never starts a line.
+  function render(into, ex) {
+    into.textContent = "";
+    let last = null;
+    return ex.heard.map(([text, kind, glued], n) => {
       const w = document.createElement("span");
       const t = document.createElement("span");
       w.className = "w";
       w.dataset.kind = kind || 0;
       t.textContent = text;
       w.append(t);
-      heard.append(w);
+      if (glued && last) {
+        const pair = document.createElement("span");
+        pair.style.whiteSpace = "nowrap";
+        last.replaceWith(pair);
+        pair.append(last, w);
+      } else {
+        if (n > 0) into.append(" ");
+        into.append(w);
+      }
+      last = w;
       return w;
     });
+  }
+
+  // Reserve the tallest example's height so nothing below the demo moves.
+  function reserve() {
+    const box = heard.parentNode;
+    const probeH = heard.cloneNode(false);
+    const probeT = typed.cloneNode(false);
+    for (const probe of [probeH, probeT]) {
+      probe.removeAttribute("id");
+      probe.style.cssText = "position:absolute;left:0;right:0;visibility:hidden;min-height:0";
+    }
+    box.append(probeH, probeT);
+    let h = 0, t = 0;
+    for (const ex of EXAMPLES) {
+      render(probeH, ex);
+      probeT.textContent = ex.typed + " ";
+      h = Math.max(h, probeH.getBoundingClientRect().height);
+      t = Math.max(t, probeT.getBoundingClientRect().height);
+    }
+    probeH.remove();
+    probeT.remove();
+    heard.style.minHeight = Math.ceil(h) + "px";
+    typed.style.minHeight = Math.ceil(t) + "px";
+  }
+
+  function load(i) {
+    index = i;
+    const ex = EXAMPLES[i];
+    words = render(heard, ex);
     typedText.textContent = ex.typed;
     typed.classList.remove("is-on");
-    caption.textContent = "You say: “" + ex.said + "” OpenRamble types: “" + ex.typed + "”";
+    caption.textContent = "You say: “" + said(ex) + "” OpenRamble types: “" + ex.typed + "”";
     shown = 0;
   }
 
@@ -908,6 +972,7 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
       typed.classList.add("is-on");
       status.textContent = "Typed at your cursor";
       phase = "done";
+      if (!auto) live.textContent = caption.textContent;
       if (auto && index < EXAMPLES.length - 1) {
         later(() => play(index + 1), 3200);
       } else {
@@ -923,8 +988,10 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
     later(release, EXAMPLES[i].heard.length * WORD_MS + 520);
   }
 
+  // A person takes over from autoplay at any moment.
   function userPress() {
-    if (phase === "listening") return;
+    if (phase === "listening" && !auto) return;
+    if (observer) { observer.disconnect(); observer = null; }
     auto = false;
     press((index + 1) % EXAMPLES.length);
   }
@@ -941,6 +1008,15 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
     if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); userPress(); }
   });
   key.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") release(); });
+  key.addEventListener("blur", release);
+  // Assistive tech activates buttons with a plain click: play one full take.
+  key.addEventListener("click", e => {
+    if (e.detail === 0 && phase !== "listening") {
+      if (observer) { observer.disconnect(); observer = null; }
+      auto = false;
+      play((index + 1) % EXAMPLES.length);
+    }
+  });
   // The real key works too: hold the right Command key anywhere on the page.
   addEventListener("keydown", e => { if (e.code === "MetaRight" && !e.repeat) userPress(); });
   addEventListener("keyup", e => { if (e.code === "MetaRight") release(); });
@@ -948,20 +1024,32 @@ tr.ours th, tr.ours td.num { color: var(--color-accent); }
 
   document.documentElement.classList.add("js");
   load(0);
+  reserve();
+  document.fonts.ready.then(reserve);
+  let frame = 0;
+  addEventListener("resize", () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(reserve); });
+
+  // The footer strike draws once when it scrolls into view.
+  const footerLine = document.getElementById("footer-line");
+  new IntersectionObserver((entries, io) => {
+    if (entries.some(e => e.isIntersecting)) { footerLine.classList.add("is-drawn"); io.disconnect(); }
+  }, { threshold: 0.8 }).observe(footerLine);
+
+  status.textContent = IDLE;
   if (reduce.matches) {
     words.forEach(w => w.classList.add("is-on", ...(w.dataset.kind !== "0" ? ["is-cut"] : [])));
     typed.classList.add("is-on");
-    status.textContent = IDLE;
     return;
   }
-  status.textContent = "";
-  new IntersectionObserver((entries, io) => {
-    if (entries.some(e => e.isIntersecting)) {
-      io.disconnect();
+  observer = new IntersectionObserver(entries => {
+    if (entries.some(e => e.isIntersecting) && phase === "done" && !auto) {
+      observer.disconnect();
+      observer = null;
       auto = true;
       play(0);
     }
-  }, { threshold: 0.6 }).observe(demo);
+  }, { threshold: 0.35 });
+  observer.observe(demo);
 })();
 </script>
 </body>
