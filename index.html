@@ -423,7 +423,7 @@ html:not(.js) .demo-head { display: none; }
 /* ── Sections ──────────────────────────────────────── */
 .section { padding-top: var(--space-3xl); }
 .section-head { display: grid; gap: var(--space-md); max-width: 44rem; }
-.section-head h2 { font-size: var(--text-xl); font-weight: 780; }
+.section-head h2 { font-size: var(--text-2xl); font-weight: 800; letter-spacing: -0.04em; }
 .section-head p { color: var(--color-muted); font-size: var(--text-md); line-height: 1.5; max-width: 38ch; }
 /* Feature sections lead with product names, so their heading is a quiet label. */
 .label-h {
@@ -469,6 +469,7 @@ html:not(.js) .demo-head { display: none; }
   overflow-wrap: anywhere;
 }
 .feat p.spec { max-width: none; color: var(--color-ink); }
+.feat .cmd { margin-top: var(--space-md); }
 .spec .from { display: block; color: var(--color-faint); }
 .spec .to { display: block; }
 .spec .to::before { content: "→ "; color: var(--color-faint); }
@@ -520,14 +521,14 @@ td { color: var(--color-muted); }
 .best { color: var(--color-ink); font-weight: 700; }
 .na { color: var(--color-faint); }
 .table-wrap { margin-top: var(--space-xl); }
-.table-note { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-sm); line-height: 1.55; max-width: 72rem; }
+.table-note { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-sm); line-height: 1.55; max-width: 46rem; }
 @media (max-width: 47.99rem) {
   table.stack, .stack tbody, .stack tr, .stack th, .stack td { display: block; }
   .stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .stack tr { padding-block: var(--space-md); border-bottom: var(--rule-hair) solid var(--color-rule); }
   .stack th, .stack td { padding: 0; border: 0; }
   .stack tbody th { margin-bottom: var(--space-xs); font-size: var(--text-base); }
-  .stack td { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-md); padding-block: 0.2rem; text-align: right; }
+  .stack td { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-md); padding-block: 0.2rem; text-align: right; text-wrap: balance; }
   .stack td::before {
     content: attr(data-label);
     content: attr(data-label) / "";
@@ -580,6 +581,8 @@ td { color: var(--color-muted); }
 .footer-links { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-lg); }
 .footer-links a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--color-muted); text-decoration: none; white-space: nowrap; }
 .footer-links a:hover { color: var(--color-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.footer-get { margin-top: var(--space-xl); }
+.nw { white-space: nowrap; }
 .fine { margin-top: var(--space-md); color: var(--color-faint); font-size: var(--text-xs); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -652,7 +655,7 @@ td { color: var(--color-muted); }
           <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>
           Download for Mac
         </a>
-        <p class="get-meta">Free public beta · macOS 14 or later · Signed and notarized<br>One 740 MB download, then two permissions: Microphone and Accessibility.</p>
+        <p class="get-meta">Free public beta · macOS 14 or later · <span class="nw">Signed and notarized</span><br>One 740 MB download, then two permissions: <span class="nw">Microphone and Accessibility.</span></p>
         <!-- SOON: Homebrew cask. When it ships, put this back under .get-meta:
         <p class="get-meta"><code>brew install --cask openramble</code></p> -->
       </div>
@@ -718,7 +721,7 @@ td { color: var(--color-muted); }
       <li class="feat">
         <h3>Command line</h3>
         <p>Transcribe files from the terminal with the model the app already installed. TXT, JSON, SRT or VTT. A skill for Claude Code and Codex is in the repository.</p>
-        <p class="spec">openramble interview.m4a --format srt &gt; interview.srt</p>
+        <pre class="cmd"><code>openramble interview.m4a --format&nbsp;srt&nbsp;&gt;&nbsp;interview.srt</code></pre>
       </li>
     </ul>
   </section>
@@ -755,7 +758,7 @@ td { color: var(--color-muted); }
               </thead>
               <tbody>
                 <tr><th scope="row">Model download</th><td data-label="Goes to">Hugging Face, GitHub as a fallback</td><td data-label="When">Once, when you click Download</td></tr>
-                <tr><th scope="row">Update check</th><td data-label="Goes to">GitHub Pages</td><td data-label="When">On a schedule. Turn it off in Settings → Updates</td></tr>
+                <tr><th scope="row">Update check</th><td data-label="Goes to">GitHub Pages</td><td data-label="When">On a schedule. Turn it off in <span class="nw">Settings → Updates</span></td></tr>
                 <tr><th scope="row">Update download</th><td data-label="Goes to">GitHub Releases</td><td data-label="When">Only after you click Install</td></tr>
               </tbody>
             </table>
@@ -819,6 +822,13 @@ td { color: var(--color-muted); }
 
 <footer class="wrap footer">
   <p class="footer-line" id="footer-line"><span class="cut-word" aria-hidden="true">Um,</span> that’s it.</p>
+  <div class="get footer-get">
+    <a class="button" href="https://github.com/mikwiseman/openramble/releases/latest">
+      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0-4-4m4 4 4-4M4 16.5h12"/></svg>
+      Download for Mac
+    </a>
+    <p class="get-meta">Free · MIT · macOS 14 or later</p>
+  </div>
   <div class="footer-row">
     <span>OpenRamble · MIT license · made by <a class="link" href="https://waiwai.is">WaiWai</a></span>
     <nav class="footer-links" aria-label="Footer">
