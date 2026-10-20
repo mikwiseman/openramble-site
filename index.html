@@ -679,12 +679,12 @@ td { color: var(--color-muted); }
     <ul class="feats">
       <li class="feat lead" data-soon>
         <h3>Clean Verbatim <span class="soon">coming soon</span></h3>
-        <p>Deletes ums, uhs, stutters and whatever you take back with “scratch that.” It only ever deletes, so it never rewords you. Doubles that mean something, like “very very”, stay. Code in backticks, paths and identifiers are never touched.</p>
+        <p>Deletes hesitations, stutters and whatever you take back with “scratch that.” It only ever deletes, so it has no way to write a word you didn’t say. When a word could be real, it stays: “um” goes only with a comma of its own, acronyms and doubles like “very very” stay, and code and paths are never touched.</p>
         <div class="proof" aria-hidden="true">
-          <p>We should<span class="w is-on is-cut"><span>, um,</span></span> ship it on Friday.</p>
+          <p>I<span class="w is-on is-cut"><span>&nbsp;I</span></span> think that the tests are green,<span class="w is-on is-cut"><span>&nbsp;uh,</span></span> mostly.</p>
           <p lang="de">Um 5 Uhr treffen wir uns im Büro. <span class="proof-note" lang="en">German “um” is a word, so it stays.</span></p>
         </div>
-        <p class="sr-only">For example, “We should, um, ship it on Friday” becomes “We should ship it on Friday”, while the German <span lang="de">“Um 5 Uhr treffen wir uns im Büro”</span> stays as it is, because there “um” is a word.</p>
+        <p class="sr-only">For example, “I I think that the tests are green, uh, mostly” becomes “I think that the tests are green, mostly”, while the German <span lang="de">“Um 5 Uhr treffen wir uns im Büro”</span> stays as it is, because there “um” is a word.</p>
       </li>
       <li class="feat" data-soon>
         <h3>As spoken <span class="soon">coming soon</span></h3>
@@ -844,7 +844,8 @@ td { color: var(--color-muted); }
 <script>
 (() => {
   // Real transcripts: what the shipping Parakeet model wrote for synthesized
-  // speech, and what Clean Verbatim inserted (openramble PR #73).
+  // speech, and what Clean Verbatim inserted. Both pairs are recorded cases in
+  // core/conformance/fixtures/text/pipeline.json on feat/clean-verbatim (PR #73).
   // Each token: [text, kind, glued]. kind 1 = filler or stutter, 2 = removed by
   // "scratch that", 3 = the command itself. glued = no space before it.
   const EXAMPLES = [
@@ -853,12 +854,9 @@ td { color: var(--color-muted); }
       typed: "The deploy passed."
     },
     {
-      heard: [["Uh,", 1], ["I"], ["need"], ["you"], ["to"], ["um,", 1], ["fix"], ["the"], ["login"], ["bug"], [",", 1, true], ["um,", 1], ["and"], ["then"], ["update"], ["the"], ["readme."]],
-      typed: "I need you to fix the login bug and then update the readme."
-    },
-    {
-      heard: [["We"], ["should"], [",", 1, true], ["um,", 1], ["ship"], ["it"], ["on"], ["Friday."], ["I", 1], ["I"], ["think"], ["that"], ["the"], ["tests"], ["are"], ["green"], [",", 1, true], ["uh,", 1], ["mostly."]],
-      typed: "We should ship it on Friday. I think that the tests are green mostly."
+      // The comma before a removed hesitation stays: it may be grammar.
+      heard: [["Uh,", 1], ["I"], ["need"], ["you"], ["to"], ["um,", 1], ["fix"], ["the"], ["login"], ["bug,"], ["um,", 1], ["and"], ["then"], ["update"], ["the"], ["readme."]],
+      typed: "I need you to fix the login bug, and then update the readme."
     }
   ];
   const WORD_MS = 240;
