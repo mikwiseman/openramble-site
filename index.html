@@ -405,6 +405,9 @@ html:not(.js) .demo-head { display: none; }
 .js .w.is-on > span { opacity: 1; transform: none; }
 .w.is-cut > span { color: var(--color-faint); }
 .w.is-cut::after { transform: scaleX(1); }
+/* A strike through one narrow letter reads as a cross; give it room. */
+.w.narrow { margin-inline: 0.16em; }
+.w.narrow::after { left: -0.12em; right: -0.12em; }
 .w.is-cmd > span { color: var(--color-accent); }
 
 .typed-text { transition: opacity var(--dur-long) var(--ease-out); }
@@ -681,7 +684,7 @@ td { color: var(--color-muted); }
         <h3>Clean Verbatim <span class="soon">coming soon</span></h3>
         <p>Deletes hesitations, stutters and whatever you take back with “scratch that.” It only ever deletes, so it has no way to write a word you didn’t say. When a word could be real, it stays: “um” goes only with a comma of its own, acronyms and doubles like “very very” stay, and code and paths are never touched.</p>
         <div class="proof" aria-hidden="true">
-          <p>I<span class="w is-on is-cut"><span>&nbsp;I</span></span> think that the tests are green,<span class="w is-on is-cut"><span>&nbsp;uh,</span></span> mostly.</p>
+          <p>I <span class="w narrow is-on is-cut"><span>I</span></span> think that the tests are green, <span class="w is-on is-cut"><span>uh,</span></span> mostly.</p>
           <p lang="de">Um 5 Uhr treffen wir uns im Büro. <span class="proof-note" lang="en">German “um” is a word, so it stays.</span></p>
         </div>
         <p class="sr-only">For example, “I I think that the tests are green, uh, mostly” becomes “I think that the tests are green, mostly”, while the German <span lang="de">“Um 5 Uhr treffen wir uns im Büro”</span> stays as it is, because there “um” is a word.</p>
@@ -720,7 +723,7 @@ td { color: var(--color-muted); }
       <li class="feat">
         <h3>Command line</h3>
         <p>Transcribe files from the terminal with the model the app already installed. TXT, JSON, SRT or VTT. A skill for Claude Code and Codex is in the repository.</p>
-        <pre class="cmd"><code>openramble interview.m4a --format&nbsp;srt&nbsp;&gt;&nbsp;interview.srt</code></pre>
+        <pre class="cmd"><code>openramble interview.m4a <span class="nw">--format&nbsp;srt&nbsp;&gt;&nbsp;interview.srt</span></code></pre>
       </li>
     </ul>
   </section>
