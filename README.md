@@ -1,37 +1,23 @@
-# openramble-site
+# OpenRamble website
 
-The English website for [OpenRamble](https://github.com/mikwiseman/openramble).
-One hand-written `index.html` with inline CSS and JavaScript. No build step, no
-framework, no analytics, no third-party requests: Manrope is self-hosted from
-`fonts/` (SIL Open Font License, `fonts/Manrope-OFL.txt`).
+The English website for [OpenRamble](https://github.com/mikwiseman/openramble):
+[mikwiseman.github.io/openramble-site](https://mikwiseman.github.io/openramble-site/).
+
+Proof uses letterpress type and proofreading marks to demonstrate Clean Verbatim.
+Static HTML, CSS and JavaScript; no build step, framework, analytics or third-party
+requests. Artwork and textures live in `assets/`. Fonts are self-hosted under
+`fonts/`, with their SIL Open Font License files.
 
 Preview locally:
 
-```bash
-python3 -m http.server 8000
+```sh
+python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-The app's Sparkle feed stays at `mikwiseman.github.io/openramble` and is not
-served from here.
+GitHub Pages publishes `main` from the repository root. Push changes, wait for the
+Pages deployment to succeed, then check the live page and its hold/release demo.
+The site uses relative asset URLs so it also works under the repository subpath.
 
-## When something ships
-
-Each unreleased item is tagged `<span class="soon">coming soon</span>`, and
-features also carry `data-soon`. Delete both when it ships.
-
-| Item | Where in `index.html` |
-|---|---|
-| Clean Verbatim | features list. The headline and hero demo also describe it: publish the site only after it ships |
-| As spoken | features list |
-| "Send it." | features list |
-| Shift for English | features list |
-| Homebrew cask | hero, the `brew install` line |
-| Public scorecard | replaces the benchmark table (`SCORECARD` comment) |
-| Stable DMG URL | download links point at `releases/latest` for now |
-
-## Before publishing
-
-- `CNAME` and the canonical and `og:` URLs say `openramble.app`, a placeholder
-  until the domain is bought.
-- The benchmark link points at `research/product-benchmark-2026-10` on `main`
-  of the openramble repo. That folder must be merged there first.
+The Russian page remains at [waiwai.is/ramble](https://waiwai.is/ramble).
+The app's Sparkle feed stays at `mikwiseman.github.io/openramble`; it is not served
+from this repository. Downloads link to the app's latest GitHub release.
