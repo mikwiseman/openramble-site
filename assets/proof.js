@@ -22,13 +22,17 @@ function rng(seed) {
   };
 }
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-const wait = (ms) => new Promise((r) => setTimeout(r, REDUCE ? 0 : ms));
 const f2 = (n) => Math.round(n * 100) / 100;
 
+// A scene's own clock. Scroll starts a figure and the clock finishes it; once the next sheet
+// starts to cover a scene, whatever is left of it plays at triple speed (see hurryCheck).
 function anim(el, kf, opt) {
   const a = el.animate(kf, REDUCE ? { ...opt, duration: 0, delay: 0 } : opt);
+  if (el.closest?.('.scene')?._hurry) a.updatePlaybackRate(3);
   return a.finished.catch(() => {});
 }
+// a pause on that clock when `el` is given, on the wall clock otherwise
+const wait = (ms, el) => (el ? anim(el, [], { duration: ms }) : new Promise((r) => setTimeout(r, REDUCE ? 0 : ms)));
 
 /* ------------------------------------------------------------ triggers */
 // A scene plays once when its element's top passes a line in the viewport.
@@ -253,17 +257,65 @@ function thumbprint(svg) {
 }
 
 /* ------------------------------------------------------------- lock-up */
+// Loose, every sort sits a little crooked and every piece of furniture leaves a hairline of
+// stone; the quoins expand and the forme closes up tight against the chase (CSS does the move).
 function chase() {
-  setSorts($('#locked-type'), parse('Your words.'), 51);
+  const set = setSorts($('#locked-type'), parse('Your words.'), 51);
+  const r = rng(12);
+  set.sorts.forEach(({ el }) => {
+    el.style.setProperty('--jx', `${f2((r() - 0.5) * 1.6)}px`);
+    el.style.setProperty('--jy', `${f2((r() - 0.5) * 3.4)}px`);
+    el.style.setProperty('--jr', `${f2((r() - 0.5) * 5)}deg`);
+  });
+  // each block cut from a different log: its own pith, ring width and tone
+  $$('.furn').forEach((el, i) => {
+    const q = rng(300 + i * 7);
+    el.style.setProperty('--gx', `${Math.round(q() * 120 - 10)}%`);
+    el.style.setProperty('--gy', `${Math.round(q() < 0.5 ? -70 - q() * 90 : 170 + q() * 90)}%`);
+    el.style.setProperty('--rp', `${f2(2.6 + q() * 1.6)}px`);
+    el.style.setProperty('--ra', `${Math.round(q() * 90)}deg`);
+    el.style.setProperty('--br', f2(0.9 + q() * 0.16));
+    el.style.setProperty('--wx', `${Math.round(q() * 220)}px`);
+    el.style.setProperty('--wy', `${Math.round(q() * 220)}px`);
+  });
+  $$('.quoin').forEach((el) => el.insertAdjacentHTML('afterbegin', quoinSvg(el.classList.contains('q-side'))));
+}
+// Two steel wedges meshing on a ratchet, drawn long and thin and stretched to the quoin's slot.
+// The outer one bears on the chase; the key drives the inner one out against the furniture.
+function quoinSvg(vertical) {
+  const L = 200;
+  const T = 22;
+  const n = 16;
+  const seam = (u) => T * (0.6 - 0.24 * u);
+  const teeth = [];
+  for (let i = 0; i < n; i++) teeth.push([(i / n) * L, seam(i / n)], [((i + 0.78) / n) * L, seam((i + 0.78) / n) - 2.4]);
+  teeth.push([L, seam(1)]);
+  const P = ([x, y]) => (vertical ? `${f2(T - y)},${f2(x)}` : `${f2(x)},${f2(y)}`);
+  const outer = [[0, 0], [L, 0], ...teeth.slice().reverse()].map(P).join(' ');
+  const inner = [...teeth, [L, T], [0, T]].map(P).join(' ');
+  const g = vertical ? 'q-steel-v' : 'q-steel-h';
+  const wedge = (pts, cls) => `<g class="${cls}"><polygon points="${pts}" fill="url(#${g})"/><polygon points="${pts}" fill="url(#q-brush)" class="q-brush"/><polygon points="${pts}" class="q-edge"/></g>`;
+  return `<svg class="quoin-svg" viewBox="0 0 ${vertical ? `${T} ${L}` : `${L} ${T}`}" preserveAspectRatio="none" aria-hidden="true">${wedge(inner, 'w-in')}${wedge(outer, 'w-out')}</svg>`;
 }
 
 /* ------------------------------------------------------------- hellbox */
-const HB = { floor: $('#hb-sorts'), tally: $('#hb-tally'), n: 0 };
+const HB = { box: $('#hellbox'), floor: $('#hb-sorts'), tally: $('#hb-tally'), n: 0, t: 0 };
+// On a phone the hellbox waits in a drawer at the edge of the screen, clear of the text, and
+// slides out while sorts are falling into it.
+function hbOpen(ms) {
+  if (!HB.box || REDUCE) return;
+  HB.box.classList.add('is-open');
+  clearTimeout(HB.t);
+  HB.t = setTimeout(() => HB.box.classList.remove('is-open'), ms);
+}
 function hbTarget() {
   if (!HB.floor) return null;
   const r = HB.floor.getBoundingClientRect();
-  if (!r.width || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return null;
-  return { x: r.left + r.width * (0.14 + Math.random() * 0.72), y: r.top + r.height * (0.22 + Math.random() * 0.56), r };
+  // aim for where the drawer will be once it is open
+  const dx = parseFloat(getComputedStyle(HB.box).translate) || 0;
+  const left = r.left - dx;
+  if (!r.width || r.bottom < 0 || r.top > innerHeight || left + r.width < 0 || left > innerWidth) return null;
+  return { x: left + r.width * (0.14 + Math.random() * 0.72), y: r.top + r.height * (0.22 + Math.random() * 0.56), r };
 }
 function hbLand(ch, x, y) {
   const r = HB.floor.getBoundingClientRect();
@@ -345,78 +397,230 @@ function setSorts(box, chars, seed = 1) {
   return { sorts, words };
 }
 
+/* --------------------------------------------------------- glyph boxes */
+// Marks live in layout space: each mark layer is an SVG that fills its positioned parent with a
+// viewBox the size of that parent, so a sort's layout offsets from the parent are SVG units and
+// no transform on the sheet (rotation, scroll tilt) can carry a mark off its letter. The pencil
+// is then measured against the ink of each glyph, read from the font, not against its metal.
+const inkCtx = document.createElement('canvas').getContext('2d');
+const inkMemo = new Map();
+function ink(ch, font) {
+  const key = font + '|' + ch;
+  if (!inkMemo.has(key)) {
+    inkCtx.font = font;
+    const m = inkCtx.measureText(ch);
+    inkMemo.set(key, {
+      l: -m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent,
+      fa: m.fontBoundingBoxAscent, fd: m.fontBoundingBoxDescent, xh: inkCtx.measureText('x').actualBoundingBoxAscent,
+    });
+  }
+  return inkMemo.get(key);
+}
+const fontOf = (cs) => `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+
+// Lay out sorts in the coordinates of `box`. Offsets are whole pixels, so within a line, where
+// sorts abut, x adds up their exact widths from the line's first sort.
+function place(recs, box) {
+  let line = null;
+  let x = 0;
+  for (const rec of recs) {
+    rec.box = null;
+    rec.g = null;
+    const el = rec.el;
+    if (!el.isConnected || el.style.display === 'none') continue;
+    let ox = 0;
+    let oy = 0;
+    for (let e = el; e && e !== box; e = e.offsetParent) { ox += e.offsetLeft; oy += e.offsetTop; }
+    const cs = getComputedStyle(el);
+    if (line === null || Math.abs(oy - line) > 2) { line = oy; x = ox; }
+    const w = parseFloat(cs.width);
+    rec.box = { x, y: oy, w, h: parseFloat(cs.height), fs: parseFloat(cs.fontSize), lh: parseFloat(cs.lineHeight), pl: parseFloat(cs.paddingLeft), font: fontOf(cs) };
+    x += w;
+  }
+}
+// the ink of one glyph, its baseline and x-height, in the same coordinates
+function glyph(rec) {
+  if (rec.g) return rec.g;
+  const b = rec.box;
+  const ch = rec.el ? rec.el.textContent || rec.ch : rec.ch;
+  const m = ink(ch, b.font);
+  const ox = b.x + b.pl;
+  const base = b.y + (b.lh - (m.fa + m.fd)) / 2 + m.fa;
+  rec.g = { ch, l: ox + m.l, r: ox + m.r, t: base - m.a, b: base + m.d, a: m.a, base, xh: m.xh, fs: b.fs };
+  return rec.g;
+}
+
+// a run is a stretch of deleted sorts on one line
 function runsOf(recs) {
   const runs = [];
   let cur = null;
-  let lastTop = 0;
   for (const rec of recs) {
-    if (!rec.el.isConnected || rec.el.style.display === 'none') continue;
-    const rect = rec.el.getBoundingClientRect();
+    if (!rec.box) continue;
     if (rec.del) {
-      if (cur && Math.abs(rect.top - lastTop) < 4) { cur.recs.push(rec); cur.rects.push(rect); }
-      else { cur = { recs: [rec], rects: [rect] }; runs.push(cur); }
-      lastTop = rect.top;
+      if (cur && Math.abs(rec.box.y - cur.y) < 4) cur.recs.push(rec);
+      else { cur = { recs: [rec], y: rec.box.y }; runs.push(cur); }
     } else cur = null;
   }
   return runs.filter((run) => run.recs.some((x) => x.ch !== ' '));
 }
 
-function strikeD(x0, x1, y, fs, seed) {
-  const r = rng(seed * 13 + 7);
-  const w = x1 - x0;
-  const a = fs * 0.035;
-  return `M${f2(x0)} ${f2(y + a * (r() - 0.5))}C${f2(x0 + w * 0.3)} ${f2(y - a * (0.6 + r()))} ${f2(x0 + w * 0.66)} ${f2(y + a * (0.4 + r()))} ${f2(x1)} ${f2(y - a * 0.5)}`;
+// Catmull-Rom through the points, every control point held inside [lo, hi] so the curve is too
+function smooth(pts, lo, hi) {
+  const cx = (v) => clamp(v, lo, hi);
+  let d = `M${f2(cx(pts[0][0]))} ${f2(pts[0][1])}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    d += `C${f2(cx(p1[0] + (p2[0] - p0[0]) / 6))} ${f2(p1[1] + (p2[1] - p0[1]) / 6)} ${f2(cx(p2[0] - (p3[0] - p1[0]) / 6))} ${f2(p2[1] - (p3[1] - p1[1]) / 6)} ${f2(cx(p2[0]))} ${f2(p2[1])}`;
+  }
+  return d;
 }
 
-// strike each run in red pencil; optionally put a dele loop above it
-function drawStrikes(svg, runs, { above = true, stagger = 200 } = {}) {
-  svg.setAttribute('viewBox', `0 0 ${svg.clientWidth} ${svg.clientHeight}`);
-  const inverse = svg.getScreenCTM().inverse();
-  const local = (rec) => {
-    const r = rec.el.getBoundingClientRect();
-    const p = new DOMPoint(r.left + r.width / 2, r.top + r.height / 2).matrixTransform(inverse);
-    const css = getComputedStyle(rec.el);
-    const width = parseFloat(css.width);
-    const height = parseFloat(css.height);
-    return { left: p.x - width / 2, right: p.x + width / 2, top: p.y - height / 2, height, fs: parseFloat(css.fontSize) };
+// One pencil stroke through a run of deleted glyphs. It strikes the letters through the middle
+// of the x-height and dips through every comma: up through a leading one, down through a
+// trailing one, a lone one gets a slash. It may not leave the deleted sorts [lo, hi], and the
+// caller has already pulled lo and hi clear of the nearest kept letters.
+const PUNCT = /^[,.;:!?…]$/;
+function stroke(gl, lo, hi, seed, weight = 0.06) {
+  const r = rng(seed * 13 + 7);
+  const fs = gl[0].fs;
+  const sw = Math.min(Math.max(1.4, fs * weight), Math.max(0.8, (hi - lo) * 0.7));
+  const isP = (g) => PUNCT.test(g.ch);
+  const letters = gl.filter((g) => !isP(g));
+  const ref = letters[0] || gl[0];
+  const yS = ref.base - ref.xh * 0.5;
+  const j = () => (r() - 0.5) * fs * 0.03;
+  const pts = [];
+  if (!letters.length) {
+    // a lone mark: one slash through it
+    const g = gl[0];
+    pts.push([g.l - fs * 0.05, g.b + fs * 0.1], [g.r + fs * 0.07, g.base - ref.xh * 0.95]);
+  } else {
+    gl.forEach((g, k) => {
+      const w = g.r - g.l;
+      const cx = (g.l + g.r) / 2;
+      if (!isP(g)) {
+        if (k === 0) pts.push([g.l - fs * 0.06, yS + j()]);
+        pts.push([cx, yS + j()]);
+        if (k === gl.length - 1) pts.push([g.r + fs * 0.06, yS - fs * 0.015 + j()]);
+        return;
+      }
+      const yDot = g.base - g.a * 0.42;
+      const before = gl.slice(0, k).some((h) => !isP(h));
+      const after = gl.slice(k + 1).some((h) => !isP(h));
+      if (!before) pts.push([g.l - fs * 0.02, g.b + fs * 0.07], [cx + w * 0.2, yDot]);
+      else if (!after) pts.push([cx - w * 0.2, yDot], [g.r + fs * 0.04, g.b + fs * 0.07]);
+      else pts.push([cx, yDot + fs * 0.01]);
+    });
+  }
+  return { d: smooth(pts, lo + sw / 2, hi - sw / 2), sw };
+}
+
+// the pencil's room for a run: its own deleted sorts, minus a clearance from the nearest kept
+// letter on either side
+function roomOf(run, recs) {
+  const a = run.recs[0];
+  const z = run.recs[run.recs.length - 1];
+  let lo = a.box.x;
+  let hi = z.box.x + z.box.w;
+  const clear = Math.max(2, a.box.fs * 0.055);
+  const near = (from, step) => {
+    for (let i = recs.indexOf(from) + step; i >= 0 && i < recs.length; i += step) {
+      const x = recs[i];
+      if (!x.box || Math.abs(x.box.y - a.box.y) > 2 || x.del) return null;
+      if (x.ch !== ' ') return glyph(x);
+    }
+    return null;
   };
+  const before = near(a, -1);
+  const after = near(z, 1);
+  if (before) lo = Math.max(lo, before.r + clear);
+  if (after) hi = Math.min(hi, after.l - clear);
+  return { lo, hi };
+}
+
+// The pencil filter is sized to its element's bounding box; a near-flat stroke has almost no
+// height, so pad the group's box or the filter clips the stroke thin.
+function padInk(svg) {
+  const g = $('.mark-ink', svg);
+  if (!g || !g.firstElementChild) return;
+  const b = g.getBBox();
+  g.insertAdjacentHTML('afterbegin', `<rect x="${f2(b.x - 8)}" y="${f2(b.y - 8)}" width="${f2(b.width + 16)}" height="${f2(b.height + 16)}" fill="none"/>`);
+}
+
+// Strike each run in red pencil, one stroke per run. With `margin`, a dele for each run is
+// written in the sheet's margin level with its line, as a proofreader marks a galley.
+function drawStrikes(svg, recs, { stagger = 200, margin = false } = {}) {
+  const box = svg.parentElement;
+  // the exact layout size, so one SVG unit is one layout pixel all the way across
+  const cs = getComputedStyle(svg);
+  const W = parseFloat(cs.width);
+  svg.setAttribute('viewBox', `0 0 ${W} ${parseFloat(cs.height)}`);
+  place(recs, box);
+  const runs = runsOf(recs);
   let html = '';
   runs.forEach((run, i) => {
-    const letters = run.recs.filter(rec => rec.ch !== ' ');
-    const first = local(letters[0]);
-    const lastR = local(letters[letters.length - 1]);
-    const fs = first.fs;
-    const stroke = Math.max(1.4, fs * 0.06);
-    // Include the stroke cap in the deletion's bounds, including single commas.
-    const inset = stroke / 2 + 0.8;
-    const x0 = first.left + inset;
-    const x1 = Math.max(x0, lastR.right - inset);
-    const top = first.top;
-    const y = top + first.height * 0.56;
-    const punctuation = letters.every(rec => /^[,.;:]$/.test(rec.ch));
-    const d = punctuation ? `M${f2(x0)} ${f2(top + first.height * .87)}L${f2(x1)} ${f2(top + first.height * .53)}` : strikeD(x0, x1, y, fs, i + 1);
-    html += `<path class="mark-path" data-i="${i}" d="${d}" stroke-width="${f2(stroke)}" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1"/>`;
-    if (above) {
-      const dw = fs * 0.66;
-      const dh = fs * 0.92;
-      html += `<use href="#i-dele" class="mark-dele" data-i="${i}" x="${f2((x0 + x1) / 2 - dw / 2)}" y="${f2(top - dh * 0.92)}" width="${f2(dw)}" height="${f2(dh)}" style="stroke-dasharray:120;stroke-dashoffset:120"/>`;
-    }
+    const { lo, hi } = roomOf(run, recs);
+    const { d, sw } = stroke(run.recs.filter((x) => x.ch !== ' ').map(glyph), lo, hi, i + 1);
+    html += `<path class="mark-path" data-i="${i}" d="${d}" stroke-width="${f2(sw)}" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1"/>`;
+    run.recs.forEach((x) => { x.marks = svg; });
   });
-  svg.innerHTML = html;
+  let deles = '';
+  const room = margin && runs.length ? box.closest('.sheet').getBoundingClientRect().right - box.getBoundingClientRect().right - 30 : 0;
+  if (room > 40) {
+    const fs = runs[0].recs[0].box.fs;
+    const lines = [];
+    runs.forEach((run, i) => {
+      const ln = lines.find((l) => Math.abs(l.y - run.y) < 4);
+      if (ln) ln.runs.push(i); else lines.push({ y: run.y, runs: [i] });
+    });
+    lines.forEach((ln) => {
+      const n = ln.runs.length;
+      const dw = Math.min(fs * 0.6, (room - (n - 1) * 9) / n);
+      const dh = dw * 1.4;
+      const g = recs.find((x) => x.box && Math.abs(x.box.y - ln.y) < 4);
+      const mid = g.box.y + g.box.h * 0.5;
+      ln.runs.forEach((i, k) => {
+        const x = W + 16 + k * (dw + 9);
+        deles += `<use href="#i-dele" class="mark-dele" data-i="${i}" x="${f2(x)}" y="${f2(mid - dh * 0.55)}" width="${f2(dw)}" height="${f2(dh)}" style="stroke-dasharray:1;stroke-dashoffset:1"/>`;
+        if (k) deles += `<path class="mark-conc" data-i="${i}" d="M${f2(x - 2)} ${f2(mid - dh * 0.3)}L${f2(x - 7)} ${f2(mid + dh * 0.3)}" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1"/>`;
+      });
+    });
+  }
+  svg.innerHTML = `<g class="mark-ink">${html}</g>${deles}`;
+  padInk(svg);
   const ps = [];
   $$('[data-i]', svg).forEach((el) => {
     const i = +el.dataset.i;
     const isDele = el.tagName.toLowerCase() === 'use';
-    ps.push(anim(el, [{ strokeDashoffset: isDele ? 120 : 1 }, { strokeDashoffset: 0 }], {
-      duration: isDele ? 360 : 240, delay: i * stagger + (isDele ? 200 : 0), easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards',
+    ps.push(anim(el, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], {
+      duration: isDele ? 360 : 240 + Math.min(260, el.getTotalLength?.() * 0.4 || 0), delay: i * stagger + (isDele ? 200 : 0), easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards',
     }));
   });
-  return Promise.all(ps);
+  return { done: Promise.all(ps), runs };
 }
 
-// sorts leave the line and fall into the hellbox
-function flySorts(recs, { delay = 0 } = {}) {
+// The piece of red pencil that lies on one sort, cut out so it can leave with that sort.
+function markPiece(rec) {
+  const b = rec.box;
+  const layer = rec.marks && rec.marks.querySelector('.mark-ink');
+  if (!b || !layer) return null;
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('class', 'fly-mark');
+  s.setAttribute('viewBox', `0 0 ${f2(b.w)} ${f2(b.h)}`);
+  s.style.cssText = `width:${f2(b.w)}px;height:${f2(b.h)}px`;
+  const paths = $$('path', layer).map((p) => `<path class="mark-path" d="${p.getAttribute('d')}" stroke-width="${p.getAttribute('stroke-width')}"/>`).join('');
+  s.innerHTML = `<g class="mark-ink"><g transform="translate(${f2(-b.x)} ${f2(-b.y)})">${paths}</g></g>`;
+  return s;
+}
+
+// Sorts leave the line and fall into the hellbox, each with its own piece of the pencil mark.
+// With `ghost`, the proof keeps a grey impression of each sort where it stood.
+function flySorts(recs, { delay = 0, ghost = false } = {}) {
   const layer = $('#flyers');
+  if (recs.length) hbOpen(delay + recs.length * 26 + 2600);
   return Promise.all(recs.map((rec, i) => {
     const el = rec.el;
     const r = el.getBoundingClientRect();
@@ -429,8 +633,11 @@ function flySorts(recs, { delay = 0 } = {}) {
     clone.style.cssText = '';
     clone.classList.remove('is-del');
     wrap.appendChild(clone);
+    const piece = rec.ch !== ' ' && markPiece(rec);
+    if (piece) wrap.appendChild(piece);
     layer.appendChild(wrap);
-    el.style.visibility = 'hidden';
+    if (ghost) el.classList.add('is-del');
+    else el.style.visibility = 'hidden';
     const tgt = hbTarget();
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
@@ -474,15 +681,79 @@ function flip(els, mutate, dur = 480, stagger = 0) {
   }));
 }
 
-function capSwaps(recs, all) {
-  recs.filter((x) => x.swap).forEach((x) => {
-    const swap = () => flip(all.map((a) => a.el).filter((e) => e !== x.el), () => { x.el.textContent = x.swap; }, 220);
-    if (REDUCE) { x.el.textContent = x.swap; return; }
-    anim(x.el, [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 130, easing: 'ease-in' }).then(() => {
-      swap();
-      anim(x.el, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 170, easing: 'ease-out' });
-    });
+// Re-set a line after deletions so no word ever slides through another: first every line closes
+// its own gaps; then the words that now belong on an earlier line lift out and every line slides
+// to its final place; only then, with their spot empty, are the lifted words set there.
+function reflow(keep, gone, mutate, dur = 440) {
+  const rect = (e) => e.getBoundingClientRect();
+  const B = keep.map(rect);
+  // widths in layout space: on a rotated sheet a client rect is a little wider than its box,
+  // and over a dozen sorts that error would carry a word into its neighbour
+  const G = gone.filter((e) => e.isConnected).map((e) => {
+    const cs = getComputedStyle(e);
+    return { r: rect(e), w: parseFloat(cs.width) + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight) };
   });
+  mutate();
+  const A = keep.map(rect);
+  const same = (a, b) => Math.abs(a.top - b.top) < Math.min(a.height, b.height) * 0.5;
+  const shift = B.map((b) => G.reduce((s, g) => s + (same(g.r, b) && g.r.left < b.left ? g.w : 0), 0));
+  // A word changes line when its line's index changes, not its height on the page: a block that
+  // is centred, or that loses a whole line, moves every line at once and nothing crosses.
+  const lineIdx = (rs) => {
+    const tops = [];
+    return rs.map((r) => {
+      let k = tops.findIndex((t) => Math.abs(t - r.top) < r.height * 0.5);
+      if (k < 0) k = tops.push(r.top) - 1;
+      return k;
+    });
+  };
+  const lb = lineIdx(B);
+  const la = lineIdx(A);
+  const lifted = la.map((k, i) => k !== lb[i]);
+  const d1 = shift.some((s) => s > 0.5) ? dur : 0;
+  const d0 = lifted.some(Boolean) ? 150 : 0;
+  const d2 = keep.some((e, i) => !lifted[i] && (Math.abs(B[i].left - shift[i] - A[i].left) > 0.5 || Math.abs(B[i].top - A[i].top) > 0.5)) ? dur : 0;
+  const d3 = d0 ? 300 : 0;
+  const T = d1 + d0 + d2 + d3;
+  if (!T || REDUCE) return Promise.resolve();
+  const at = (ms) => ms / T;
+  const t = (x, y) => `translate(${f2(x)}px,${f2(y)}px)`;
+  const ease = 'cubic-bezier(.55,0,.2,1)';
+  return Promise.all(keep.map((e, i) => {
+    const x0 = B[i].left - A[i].left;
+    const y0 = B[i].top - A[i].top;
+    const x1 = x0 - shift[i];
+    if (Math.abs(x0) < 0.5 && Math.abs(y0) < 0.5) return null;
+    const kf = lifted[i] ? [
+      { transform: t(x0, y0), opacity: 1, offset: 0, easing: ease },
+      { transform: t(x1, y0), opacity: 1, offset: at(d1), easing: 'ease-in' },
+      { transform: t(x1, y0 - 5), opacity: 0, offset: at(d1 + d0) },
+      { transform: t(0, -6), opacity: 0, offset: at(d1 + d0 + d2), easing: 'ease-out' },
+      { transform: t(0, 0), opacity: 1, offset: 1 },
+    ] : [
+      { transform: t(x0, y0), offset: 0, easing: ease },
+      { transform: t(x1, y0), offset: at(d1) },
+      { transform: t(x1, y0), offset: at(d1 + d0), easing: ease },
+      { transform: t(0, 0), offset: at(d1 + d0 + d2) },
+      { transform: t(0, 0), offset: 1 },
+    ];
+    return anim(e, kf, { duration: T, easing: 'linear' });
+  }));
+}
+
+// Resolves once every capital is in and its neighbours have settled, so what
+// measures the line afterwards (the knee) sees the capital's real width.
+function capSwaps(recs, all) {
+  return Promise.all(recs.filter((x) => x.swap).map((x) => {
+    const swap = () => flip(all.map((a) => a.el).filter((e) => e !== x.el), () => { x.el.textContent = x.swap; }, 220);
+    if (REDUCE) { x.el.textContent = x.swap; return null; }
+    // the capital opens from its left edge at the same pace as its neighbours make room for it
+    const o = '0 60%';
+    return anim(x.el, [{ transform: 'scaleX(1)', transformOrigin: o }, { transform: 'scaleX(0)', transformOrigin: o }], { duration: 130, easing: 'ease-in' }).then(() => Promise.all([
+      swap(),
+      anim(x.el, [{ transform: 'scaleX(0)', transformOrigin: o }, { transform: 'scaleX(1)', transformOrigin: o }], { duration: 220, easing: 'cubic-bezier(.55,0,.2,1)' }),
+    ]));
+  }));
 }
 
 // the proof press: a steel roller passes and the line appears behind it
@@ -527,23 +798,49 @@ function placeHeroMarks(lineRect) {
   $('.dele-note', H.margin).style.top = `${f2(ref.top - m.top + ref.height / 2 + dh * .55)}px`;
   H.note.style.top = `${f2(h1.bottom - m.top - 30)}px`;
 }
-function fallFromInk(span) {
+// The display type is inked text, not sorts: measure it character by character with a Range,
+// relative to its own word, and carry that into the sheet's layout space.
+function inkChars(span, box) {
+  let ox = 0;
+  let oy = 0;
+  for (let e = span; e && e !== box; e = e.offsetParent) { ox += e.offsetLeft; oy += e.offsetTop; }
+  const cs = getComputedStyle(span);
+  const sr = span.getBoundingClientRect();
+  const node = span.firstChild;
+  const rg = document.createRange();
+  const b = { y: oy + parseFloat(cs.paddingTop), fs: parseFloat(cs.fontSize), lh: parseFloat(cs.lineHeight), pl: 0, font: fontOf(cs) };
+  return [...node.textContent].map((ch, i) => {
+    rg.setStart(node, i);
+    rg.setEnd(node, i + 1);
+    const r = rg.getBoundingClientRect();
+    return { ch, el: null, del: true, box: { ...b, x: ox + r.left - sr.left, w: r.width, h: b.lh } };
+  });
+}
+function fallFromInk(span, chars) {
   const r = span.getBoundingClientRect();
   const fs = parseFloat(getComputedStyle(span).fontSize);
   const row = document.createElement('div');
   row.className = 'fly fly-row';
   row.style.cssText = `left:${f2(r.left)}px;top:${f2(r.top + r.height / 2 - fs * 0.58)}px;font:400 ${fs}px/1 var(--serif);display:flex;letter-spacing:-.014em`;
-  const recs = [...span.textContent].map((ch) => {
+  const recs = [...span.textContent].map((ch, i) => {
     const el = document.createElement('span');
     el.className = ch === ' ' ? 'q' : 's';
     if (ch !== ' ') el.textContent = ch;
     row.appendChild(el);
-    return { el, ch };
+    // the same glyph, now cast on a sort: a taller body and a hair of side bearing
+    const c = chars[i] && chars[i].box;
+    const box = c && { ...c, x: c.x - fs * 0.012, y: c.y - (fs * 1.16 - c.lh) / 2, w: c.w + fs * 0.024, h: fs * 1.16 };
+    return { el, ch, box, marks: H.strike };
   });
   $('#flyers').appendChild(row);
   anim(row, [{ opacity: 0, transform: 'translateY(0)' }, { opacity: 1, transform: `translateY(${f2(-fs * 0.05)}px)` }], { duration: 200, fill: 'forwards', easing: 'ease-out' });
   anim(span, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' });
-  return wait(210).then(() => flySorts(recs)).then(() => row.remove());
+  return wait(210).then(() => {
+    // the stroke leaves in pieces, each on its own sort
+    const p = flySorts(recs);
+    H.strike.innerHTML = '';
+    return p;
+  }).then(() => row.remove());
 }
 async function heroIntro() {
   const gone = $('.gone', H.h1);
@@ -568,36 +865,36 @@ async function heroIntro() {
   await wait(120);
   root.classList.add('intro-go');
   // the first proof is pulled: a roller passes down the sheet
-  const band = document.createElement('div');
-  band.className = 'press-band';
-  band.setAttribute('aria-hidden', 'true');
-  H.sheet.appendChild(band);
-  const tr = H.type.getBoundingClientRect();
-  const sr = H.sheet.getBoundingClientRect();
-  const y0 = tr.top - sr.top - 80;
-  const y1 = tr.bottom - sr.top + 40;
   const dur = 1050;
-  const easing = 'cubic-bezier(.5,0,.3,1)';
-  anim(H.type, [{ clipPath: 'inset(-12% -12% 100% -12%)' }, { clipPath: 'inset(-12% -12% -12% -12%)' }], { duration: dur, easing, fill: 'backwards' });
-  anim(band, [{ transform: `translateY(${y0}px)`, opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.85 }, { transform: `translateY(${y1}px)`, opacity: 0 }], { duration: dur, easing, fill: 'forwards' }).then(() => band.remove());
+  pullSheet(H.sheet, H.type, dur);
   await wait(dur * 0.62);
   // the proofreader reads it and marks the only thing it ever marks
   const gr = gone.getBoundingClientRect();
   placeHeroMarks(gr);
-  const box = H.strike.getBoundingClientRect();
-  H.strike.setAttribute('viewBox', `0 0 ${f2(box.width)} ${f2(box.height)}`);
-  const fs = parseFloat(getComputedStyle(H.h1).fontSize);
-  const y = gr.top - box.top + gr.height * 0.6;
-  H.strike.innerHTML = `<path class="mark-path" d="${strikeD(gr.left - box.left + fs * 0.08, gr.right - box.left - fs * 0.02, y, fs * 0.8, 3)}" stroke-width="${f2(fs * 0.045)}" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1"/>`;
-  await anim($('path', H.strike), [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 300, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' });
+  const scs = getComputedStyle(H.strike);
+  H.strike.setAttribute('viewBox', `0 0 ${parseFloat(scs.width)} ${parseFloat(scs.height)}`);
+  const chars = inkChars(gone, H.sheet);
+  const gl = chars.filter((c) => c.ch !== ' ').map(glyph);
+  let lo = chars[0].box.x;
+  let hi = chars[chars.length - 1].box.x + chars[chars.length - 1].box.w;
+  // clear of the "t" it follows, and of the next word if that shares the line
+  const clear = Math.max(1.6, gl[0].fs * 0.05);
+  const words = $$('.w', H.h1).filter((w) => w !== gone);
+  const k = words.findIndex((w) => w.compareDocumentPosition(gone) & Node.DOCUMENT_POSITION_PRECEDING);
+  const prev = k > 0 ? inkChars(words[k - 1], H.sheet) : null;
+  const next = k >= 0 ? inkChars(words[k], H.sheet) : null;
+  if (prev) lo = Math.max(lo, glyph(prev[prev.length - 1]).r + clear);
+  if (next && Math.abs(next[0].box.y - chars[0].box.y) < 4) hi = Math.min(hi, glyph(next[0]).l - clear);
+  const { d, sw } = stroke(gl, lo, hi, 3, 0.045);
+  H.strike.innerHTML = `<g class="mark-ink"><path class="mark-path" d="${d}" stroke-width="${f2(sw)}" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1"/></g>`;
+  padInk(H.strike);
+  await anim($('path', H.strike), [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 380, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' });
   H.dele.classList.add('is-on');
   await wait(560);
   hbTally(1);
-  anim(H.strike, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 120, fill: 'forwards' });
-  const falling = fallFromInk(gone);
+  const falling = fallFromInk(gone, chars);
   await wait(300);
-  const words = $$('.w', H.h1).filter((w) => w !== gone);
-  await flip(words, () => { gone.style.display = 'none'; }, 620, 14);
+  await reflow(words, [gone], () => { gone.style.display = 'none'; }, 520);
   H.note.classList.add('is-on');
   placeHeroMarks(phone() ? null : gr);
   await falling;
@@ -618,6 +915,29 @@ const G = {
   slip: $('.slip-live'), no: $('#proof-no'), press: $('#press'), sheet: $('.sheet-gesture'), turn: $('#turn-note'),
   state: 'idle', idx: 0, set: null, dropped: 0, timer: 0, t0: 0, auto: false, ghost: false, used: false, proofs: 0, token: 0,
 };
+const proofText = (text) => (text ? (/[.!?]$/.test(text) ? text : `${text}…`) : '…');
+// The plate never changes size: the stick and the proof slip are measured once for the
+// longest line they will ever hold, at this width.
+function reserve() {
+  const probe = G.lines.cloneNode(false);
+  probe.removeAttribute('id');
+  probe.style.cssText = `position:absolute;left:0;top:0;width:${G.lines.clientWidth}px;min-height:0;visibility:hidden`;
+  G.lines.parentElement.appendChild(probe);
+  let h = 0;
+  SENT.forEach((s) => { setSorts(probe, parse(s)); h = Math.max(h, probe.offsetHeight); });
+  probe.remove();
+  G.lines.style.minHeight = `${h}px`;
+  const p = $('.printed', G.slip);
+  const pp = p.cloneNode(false);
+  pp.removeAttribute('id');
+  pp.removeAttribute('aria-live');
+  pp.style.cssText = `position:absolute;left:0;top:0;width:${p.clientWidth}px;visibility:hidden`;
+  G.slip.appendChild(pp);
+  let ph = 0;
+  SENT.forEach((s) => { pp.textContent = proofText(cleanOf(parse(s))); ph = Math.max(ph, pp.offsetHeight); });
+  pp.remove();
+  p.style.minHeight = `${ph}px`;
+}
 function setStep(name) {
   G.sheet.classList.toggle('press-on', !!name);
   $$('.step', G.sheet).forEach((s) => s.classList.toggle('is-now', s.dataset.step === name));
@@ -682,20 +1002,24 @@ async function gSet(recs, tok) {
   const keep = recs.filter((x) => !x.del);
   const text = cleanOf(recs);
   if (dels.length) {
-    const runs = runsOf(recs);
-    await drawStrikes(G.marks, runs, { above: true, stagger: 150 });
+    const { done, runs } = drawStrikes(G.marks, recs, { stagger: 150, margin: !phone() });
+    await done;
     if (tok !== G.token) return;
     await wait(220);
     if (tok !== G.token) return;
     hbTally(HB.n + runs.length);
     flySorts(dels);
-    anim(G.marks, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 160, fill: 'forwards' }).then(() => { if (tok === G.token) { G.marks.innerHTML = ''; G.marks.getAnimations().forEach((a) => a.cancel()); } });
+    // each stroke leaves in pieces with its sorts; the deles stay in the margin
+    $('.mark-ink', G.marks)?.remove();
     await wait(260);
     if (tok !== G.token) return;
-    await flip(keep.map((x) => x.el), () => { dels.forEach((x) => { x.el.style.display = 'none'; }); }, 460);
+    await reflow(keep.map((x) => x.el), dels.map((x) => x.el), () => { dels.forEach((x) => { x.el.style.display = 'none'; }); });
     if (tok !== G.token) return;
+    // the line is set: its margin marks have been carried out
+    $$('.mark-dele, .mark-conc', G.marks).forEach((m) => anim(m, [{ opacity: 1 }, { opacity: 0 }], { duration: 320, fill: 'forwards' }).then(() => m.remove()));
   }
-  capSwaps(keep, keep);
+  await capSwaps(keep, keep);
+  if (tok !== G.token) return;
   // lock up: the knee closes on the line
   const sr = G.knee.parentElement.getBoundingClientRect();
   const kr = G.knee.getBoundingClientRect();
@@ -706,7 +1030,7 @@ async function gSet(recs, tok) {
   if (tok !== G.token) return;
   G.proofs++;
   G.no.textContent = G.proofs;
-  await pull(G.slip, text ? (/[.!?]$/.test(text) ? text : `${text}…`) : '…');
+  await pull(G.slip, proofText(text));
   if (tok !== G.token) return;
   G.state = 'idle';
   setStep(null);
@@ -773,7 +1097,7 @@ function figuresInit() {
   when(kept, 0.62, () => kept.classList.add('is-on'));
 }
 function figureMarks(fig, still) {
-  const runs = runsOf(fig._set.sorts);
+  const { done, runs } = drawStrikes($('.galley-marks', fig), fig._set.sorts, { stagger: still ? 0 : 230 });
   const margin = $('.galley-margin', fig);
   margin.textContent = '';
   runs.forEach((run, i) => {
@@ -784,26 +1108,25 @@ function figureMarks(fig, still) {
     s.innerHTML = '<use href="#i-dele"/>';
     margin.appendChild(s);
   });
-  const p = drawStrikes($('.galley-marks', fig), runs, { above: false, stagger: still ? 0 : 230 });
   const kids = Array.from(margin.children);
   kids.forEach((k, i) => setTimeout(() => k.classList.add('is-on'), still ? 0 : 150 + i * 115));
   if (still) fig.classList.add('is-printed');
-  return { p, runs };
+  return { p: done, runs };
 }
 async function playFigure(fig) {
   if (fig._played) return;
   fig._played = true;
   const { p, runs } = figureMarks(fig, false);
   await p;
-  await wait(420);
-  const sorts = fig._set.sorts;
-  const dels = sorts.filter((x) => x.del);
+  await wait(420, fig);
+  const dels = fig._set.sorts.filter((x) => x.del);
   hbTally(HB.n + runs.length);
-  await flySorts(dels);
-  // Keep a marked impression of the original above the clean proof.
-  dels.forEach(x => { x.el.style.visibility = ''; x.el.classList.add('is-del'); });
+  // each sort leaves with its piece of the mark; the galley keeps a marked impression of it
+  const flying = flySorts(dels, { ghost: true });
+  await wait(420, fig);
   fig.classList.add('is-printed');
   await pull($('.slip-fig', fig));
+  await flying;
   fig.classList.add('is-done');
 }
 
@@ -824,27 +1147,30 @@ function whereInit() {
   when(tty, 0.55, () => playTty(tty));
 }
 async function playLetter(el) {
-  await wait(500);
+  await wait(500, el);
   await deleteCommand(el);
   const lp2 = $('.lp2', el);
   await flip([lp2], () => el.classList.add('is-done'), 640);
 }
 async function playTty(el) {
-  await wait(900);
+  await wait(900, el);
   await deleteCommand(el);
   const first = $('.tl', el);
   await flip([first], () => el.classList.add('is-done'), 520);
   el.classList.add('is-pressed');
-  await wait(170);
+  await wait(170, el);
   el.classList.remove('is-pressed');
 }
 
 async function deleteCommand(el) {
   const sorts = el._command.sorts;
-  await drawStrikes($('.command-marks', el), runsOf(sorts), { above: false, stagger: 0 });
-  await wait(300);
+  const marks = $('.command-marks', el);
+  await drawStrikes(marks, sorts, { stagger: 0 }).done;
+  await wait(300, el);
   hbTally(HB.n + 1);
-  await flySorts(sorts);
+  const flying = flySorts(sorts);
+  $('.mark-ink', marks)?.remove();
+  await flying;
 }
 
 /* ------------------------------------------------------------ the sign */
@@ -866,8 +1192,11 @@ function signInit() {
   new IntersectionObserver((ents) => ents.forEach((e) => {
     const was = SIGN.vis;
     SIGN.vis = e.isIntersecting;
-    if (SIGN.vis && !was) { SIGN.art.classList.add('is-locked'); signKick(0.32); }
-  }), { threshold: 0.3 }).observe(SIGN.art);
+    if (SIGN.vis && !was && !SIGN.art.classList.contains('is-locked')) {
+      // a beat to see it loose, then the key turns
+      setTimeout(() => { SIGN.art.classList.add('is-locked'); signKick(0.32); }, REDUCE ? 0 : 450);
+    }
+  }), { threshold: 0.45 }).observe(SIGN.art);
   if (FINE) {
     SIGN.art.addEventListener('pointermove', (e) => {
       const r = SIGN.el.getBoundingClientRect();
@@ -957,6 +1286,58 @@ function depthInit() {
   if (!SCROLL_TL) run(scrollFallback);
 }
 
+/* ------------------------------------------------------------- dwell */
+// On a desk wide enough, each sheet stays pinned while the next one slides over it, and the
+// gap before the next one (CSS --dwell) is its time to finish. If the next sheet arrives
+// first anyway, the scene's own clock runs at triple speed until it is uncovered again.
+const SCENES = $$('.scene');
+const STICKY = matchMedia('(min-width: 900px) and (prefers-reduced-motion: no-preference)');
+function hurryCheck() {
+  if (!STICKY.matches) return;
+  for (let i = 0; i < SCENES.length - 1; i++) {
+    const a = SCENES[i];
+    const covered = SCENES[i + 1].getBoundingClientRect().top < Math.min(a.getBoundingClientRect().bottom, innerHeight) - 2;
+    if (covered && !a._hurry) {
+      a.getAnimations({ subtree: true }).forEach((x) => {
+        if (x.timeline === document.timeline && !(x instanceof CSSAnimation) && !(x instanceof CSSTransition)) x.updatePlaybackRate(3);
+      });
+    }
+    a._hurry = covered;
+  }
+}
+
+/* ------------------------------------------------------------ bookend */
+// The page ends the way it began: the roller pulls one last proof and the dele is written.
+function pullSheet(sheet, type, dur) {
+  const band = document.createElement('div');
+  band.className = 'press-band';
+  band.setAttribute('aria-hidden', 'true');
+  sheet.appendChild(band);
+  const tr = type.getBoundingClientRect();
+  const sr = sheet.getBoundingClientRect();
+  const easing = 'cubic-bezier(.5,0,.3,1)';
+  anim(type, [{ clipPath: 'inset(-12% -12% 100% -12%)' }, { clipPath: 'inset(-12% -12% -12% -12%)' }], { duration: dur, easing, fill: 'backwards' });
+  return anim(band, [{ transform: `translateY(${tr.top - sr.top - 80}px)`, opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.85 }, { transform: `translateY(${tr.bottom - sr.top + 40}px)`, opacity: 0 }], { duration: dur, easing, fill: 'forwards' }).then(() => band.remove());
+}
+function bookendInit() {
+  const sheet = $('.sheet-colophon');
+  const type = $('.colophon-type', sheet);
+  if (!sheet || REDUCE) return;
+  type.classList.add('is-waiting');
+  $('.device', sheet).classList.add('is-pending');
+  let pulled = false;
+  const lastProof = async () => {
+    if (pulled) return;
+    pulled = true;
+    type.classList.remove('is-waiting');
+    await pullSheet(sheet, type, 1250);
+    $('.device', sheet).classList.add('is-on');
+  };
+  when(type, 0.5, lastProof);
+  // a keyboard user can reach Download before the sheet is half way up the screen
+  type.addEventListener('focusin', lastProof);
+}
+
 /* -------------------------------------------------- masthead & scroll */
 const MAST = $('#mast');
 let lastY = scrollY;
@@ -968,9 +1349,9 @@ function onScroll() {
   if (SIGN.vis) signKick(clamp((y - lastY) * 0.0012, -0.12, 0.12));
   lastY = y;
   if (!SCROLL_TL && !REDUCE) run(scrollFallback);
-  if (triggers.length) run(trigTask);
+  run(trigTask);
 }
-function trigTask() { checkTriggers(); return false; }
+function trigTask() { if (triggers.length) checkTriggers(); hurryCheck(); return false; }
 addEventListener('scroll', onScroll, { passive: true });
 MAST.addEventListener('focusin', () => MAST.classList.remove('is-hidden'));
 
@@ -984,6 +1365,7 @@ addEventListener('resize', () => {
     $$('[data-ruler="picas"],[data-ruler="stick"]').forEach(ruler);
     gaugeLayout();
     sizeNotes();
+    reserve();
     if (!$('.gone', H.h1)) placeHeroMarks();
     depthLayout();
     if (innerWidth !== lastW) {
@@ -1005,13 +1387,15 @@ function boot() {
   if (!REDUCE) $$('.sheet').forEach((s) => s.setAttribute('data-tilt', ''));
   depthInit();
   gestureInit();
+  reserve();
   figuresInit();
   whereInit();
   signInit();
   gaugeInit();
+  bookendInit();
   onScroll();
   heroIntro();
   setTimeout(checkTriggers, 300);
-  document.fonts.ready.then(() => { paperAll(); sizeNotes(); gaugeLayout(); if (!$('.gone', H.h1)) placeHeroMarks(); $$('.fig.is-printed').forEach(fig => figureMarks(fig, true)); depthLayout(); });
+  document.fonts.ready.then(() => { paperAll(); sizeNotes(); reserve(); gaugeLayout(); if (!$('.gone', H.h1)) placeHeroMarks(); $$('.fig.is-printed').forEach(fig => figureMarks(fig, true)); depthLayout(); });
 }
 boot();

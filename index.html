@@ -25,14 +25,17 @@
 <link rel="preload" href="./fonts/eb-garamond/eb-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="./fonts/eb-garamond/eb-garamond-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
 <script>document.documentElement.classList.add("js")</script>
-<link rel="stylesheet" href="./assets/proof.css">
-<script type="module" src="./assets/proof.js"></script>
+<link rel="stylesheet" href="./assets/proof.css?v=20261027">
+<script type="module" src="./assets/proof.js?v=20261027"></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false">
   <defs>
     <symbol id="i-cmd" viewBox="0 0 24 24"><path d="M9 6V18M15 6V18M6 9H18M6 15H18M9 6A3 3 0 1 0 6 9M15 6A3 3 0 1 1 18 9M9 18A3 3 0 1 1 6 15M15 18A3 3 0 1 0 18 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
-    <symbol id="i-dele" viewBox="0 0 40 56"><path d="M4 12C13 11 25 8 35 6M31 3C26 15 21 30 15 43C10 54 4 51 6 44C8 37 20 38 23 44C26 52 15 56 12 48" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-dele" viewBox="0 0 40 56"><path d="M8 13C9 6 15 2.5 21 3C28 3.5 31.5 9 31.5 17C31.5 27 31 38 26 46C22 52 13 54 8.5 48C4.5 43 6 34 13.5 31.5C20 29.5 27 32 30.5 37" pathLength="1" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <linearGradient id="q-steel-h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eceeed"/><stop offset=".42" stop-color="#b9bcbc"/><stop offset="1" stop-color="#7a7d80"/></linearGradient>
+    <linearGradient id="q-steel-v" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eceeed"/><stop offset=".42" stop-color="#b9bcbc"/><stop offset="1" stop-color="#7a7d80"/></linearGradient>
+    <pattern id="q-brush" patternUnits="userSpaceOnUse" width="256" height="384"><image href="./assets/brushed.webp" width="256" height="384"/></pattern>
     <symbol id="i-reg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width=".7"><circle cx="12" cy="12" r="6.2"/><circle cx="12" cy="12" r="2.6"/><path d="M12 0V24M0 12H24"/></g></symbol>
     <filter id="f-pencil" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="n"/>
@@ -259,8 +262,23 @@
     <div class="chase-art">
       <div class="chase" aria-hidden="true">
         <span class="chase-stamp">OPENRAMBLE · LOCK-UP</span>
-        <div class="lock-type" id="locked-type"></div>
-        <div class="quoin quoin-left"></div><div class="quoin quoin-right"><span class="quoin-key"></span></div>
+        <div class="bed">
+          <div class="forme">
+            <div class="pc quoin q-head"><span class="quoin-key"></span></div>
+            <div class="pc furn f-a1"></div>
+            <div class="pc furn f-a2"></div>
+            <div class="pc furn f-b"></div>
+            <div class="pc furn f-l"></div>
+            <div class="pc lead l-top"></div>
+            <div class="pc lock-type" id="locked-type"></div>
+            <div class="pc lead l-bot"></div>
+            <div class="pc furn f-r"></div>
+            <div class="pc quoin q-side"><span class="quoin-key"></span></div>
+            <div class="pc furn f-c"></div>
+            <div class="pc furn f-d1"></div>
+            <div class="pc furn f-d2"></div>
+          </div>
+        </div>
         <span class="chase-caption">A line, locked in.</span>
       </div>
       <div class="sign-hook" aria-hidden="true"></div>
@@ -320,6 +338,12 @@
 <section class="scene colophon" id="download" aria-labelledby="d-h">
   <div class="deco under u9" data-depth="-0.05" aria-hidden="true"></div>
   <article class="sheet sheet-colophon" data-deckle="3" data-sig="H">
+    <svg class="reg r-tl" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-reg" class="reg-k"/><use href="#i-reg" class="reg-r"/></svg>
+    <svg class="reg r-tr" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-reg" class="reg-k"/><use href="#i-reg" class="reg-r"/></svg>
+    <svg class="reg r-bl" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-reg" class="reg-k"/><use href="#i-reg" class="reg-r"/></svg>
+    <svg class="reg r-br" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-reg" class="reg-k"/><use href="#i-reg" class="reg-r"/></svg>
+    <p class="slug" aria-hidden="true">OpenRamble · sheet H · last proof</p>
+    <div class="colophon-type">
     <div class="device" aria-hidden="true">
       <svg viewBox="0 0 120 120" class="device-svg">
         <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="1.2"/>
@@ -336,6 +360,7 @@
       <a class="btn btn-ink btn-lg" href="https://github.com/mikwiseman/openramble/releases/latest">Download for Mac</a>
       <p class="req">macOS 14 or later on Apple Silicon. Intel support is experimental. Signed and notarized by Apple.</p>
     </div>
+    </div>
     <footer class="credits">
       <p class="sc credits-h">Colophon</p>
       <p>Speech recognition by transcribe.cpp from CJ Pais and the Handy team. Model: Parakeet Ultra by Moondream (CC&nbsp;BY&nbsp;4.0), built on NVIDIA Parakeet TDT 0.6B v3.</p>
@@ -345,6 +370,7 @@
 </section>
 
 </main>
+
 
 <div class="flyers" id="flyers" aria-hidden="true"></div>
 <div class="lamp" aria-hidden="true"></div>
